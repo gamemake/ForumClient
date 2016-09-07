@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ContentPage
+		xmlns="http://xamarin.com/schemas/2014/forms"
+		xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+		xmlns:local="clr-namespace:abcd"
+		x:Class="abcd.AccountPage"
+		Title="Account">
+	<ContentPage.ToolbarItems>
+		<ToolbarItem Text="Sign Up" Clicked="OnSignUp"/>
+	</ContentPage.ToolbarItems>
+	<ContentPage.Content>
+		<StackLayout VerticalOptions="Center" HorizontalOptions="FillAndExpand" Padding="20">
+			<Label Text="Username"/>
+			<Entry x:Name="UsernameEntry" Placeholder="Please input username"/>
+			<Label Text="Password"/>
+			<Entry x:Name="PasswordEntry" Placeholder="Please input password" IsPassword="true"/>
+			<Button Text="Login" Clicked="OnSignIn"/>
+			<Label x:Name="MessageLabel"/>
+			<BoxView HeightRequest="10" />
+			<Button Text="Settings" Clicked="OnSettings" />
+		</StackLayout>
+	</ContentPage.Content>
+</ContentPage>

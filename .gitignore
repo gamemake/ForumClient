@@ -1,0 +1,10 @@
+
+.DS_Store
+iOS/bin
+iOS/obj
+Droid/bin
+Droid/obj
+packages
+!packages/repositories.config
+*.userprefs
+
