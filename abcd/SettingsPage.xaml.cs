@@ -11,6 +11,13 @@ namespace abcd
         {
             InitializeComponent();
         }
+
+        async void OnReturn(object sender, EventArgs e)
+        {
+            var Main = Parent as NavigationPage;
+            await Main.Navigation.PopAsync();
+
+        }
     }
 }
 

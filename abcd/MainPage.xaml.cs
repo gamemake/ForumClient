@@ -149,6 +149,8 @@ namespace abcd
             });
 
             InitializeComponent();
+
+            NavigationPage.SetHasNavigationBar(this, false);
             menuList.ItemsSource = ItemsXXX;
             menuList.SelectedItem = ItemsXXX[0];
         }
@@ -159,6 +161,13 @@ namespace abcd
             Main.Navigation.InsertPageBefore(new AccountPage(), this);
             await Main.PopAsync();
         }
+
+        async void OnSettings(object sender, EventArgs e)
+        {
+            var Main = Parent as NavigationPage;
+            await Main.PushAsync(new SettingsPage());
+        }
+
 
         void OnMenuSelected(object sender, SelectedItemChangedEventArgs e)
         {

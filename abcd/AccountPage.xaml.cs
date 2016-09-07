@@ -23,8 +23,9 @@ namespace abcd
             Console.WriteLine("{0} {1}", UsernameEntry.Text, PasswordEntry.Text);
         }
 
-        void OnSettings(object sender, EventArgs e)
+        async void OnSettings(object sender, EventArgs e)
         {
+            await Navigation.PushAsync(new SettingsPage());
         }
     }
 }
