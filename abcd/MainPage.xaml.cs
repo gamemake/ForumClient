@@ -164,6 +164,7 @@ namespace abcd
 
         async void OnSettings(object sender, EventArgs e)
         {
+            IsPresented = false;
             var Main = Parent as NavigationPage;
             await Main.PushAsync(new SettingsPage());
         }
