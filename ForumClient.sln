@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForumClient.iOS", "ForumCli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForumClient.Droid", "ForumClient.Droid\ForumClient.Droid.csproj", "{25AB034B-D77F-49D8-BEBC-D6817532F79E}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ForumClient.Api", "ForumClient.Api\ForumClient.Api.shproj", "{677C9F3F-0710-41E4-AF4C-587A6F797466}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForumClient.Console", "ForumClient.Console\ForumClient.Console.csproj", "{6FF02893-59F1-4568-873A-C9CE5C58FBFA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|iPhoneSimulator = Debug|iPhoneSimulator
@@ -41,5 +45,17 @@ Global
 		{25AB034B-D77F-49D8-BEBC-D6817532F79E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{25AB034B-D77F-49D8-BEBC-D6817532F79E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{25AB034B-D77F-49D8-BEBC-D6817532F79E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FF02893-59F1-4568-873A-C9CE5C58FBFA}.Debug|iPhoneSimulator.ActiveCfg = Debug|iPhoneSimulator
+		{6FF02893-59F1-4568-873A-C9CE5C58FBFA}.Debug|iPhoneSimulator.Build.0 = Debug|iPhoneSimulator
+		{6FF02893-59F1-4568-873A-C9CE5C58FBFA}.Release|iPhone.ActiveCfg = Release|iPhoneSimulator
+		{6FF02893-59F1-4568-873A-C9CE5C58FBFA}.Release|iPhone.Build.0 = Release|iPhoneSimulator
+		{6FF02893-59F1-4568-873A-C9CE5C58FBFA}.Release|iPhoneSimulator.ActiveCfg = Release|iPhoneSimulator
+		{6FF02893-59F1-4568-873A-C9CE5C58FBFA}.Release|iPhoneSimulator.Build.0 = Release|iPhoneSimulator
+		{6FF02893-59F1-4568-873A-C9CE5C58FBFA}.Debug|iPhone.ActiveCfg = Debug|iPhoneSimulator
+		{6FF02893-59F1-4568-873A-C9CE5C58FBFA}.Debug|iPhone.Build.0 = Debug|iPhoneSimulator
+		{6FF02893-59F1-4568-873A-C9CE5C58FBFA}.Debug|Any CPU.ActiveCfg = Debug|iPhoneSimulator
+		{6FF02893-59F1-4568-873A-C9CE5C58FBFA}.Debug|Any CPU.Build.0 = Debug|iPhoneSimulator
+		{6FF02893-59F1-4568-873A-C9CE5C58FBFA}.Release|Any CPU.ActiveCfg = Release|iPhoneSimulator
+		{6FF02893-59F1-4568-873A-C9CE5C58FBFA}.Release|Any CPU.Build.0 = Release|iPhoneSimulator
 	EndGlobalSection
 EndGlobal

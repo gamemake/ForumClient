@@ -4,6 +4,8 @@ ForumClient.iOS/bin
 ForumClient.iOS/obj
 ForumClient.Droid/bin
 ForumClient.Droid/obj
+ForumClient.Console/bin
+ForumClient.Console/obj
 packages
 !packages/repositories.config
 *.userprefs
