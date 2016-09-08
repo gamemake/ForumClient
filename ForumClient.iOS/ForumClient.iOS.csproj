@@ -155,6 +155,7 @@
     <BundleResource Include="Resources\Icon-60%403x.png" />
     <BundleResource Include="Resources\Icon-60%402x.png" />
   </ItemGroup>
+  <Import Project="..\HtmlAgilityPack\HtmlAgilityPack.projitems" Label="Shared" Condition="Exists('..\HtmlAgilityPack\HtmlAgilityPack.projitems')" />
   <Import Project="..\ForumClient.Api\ForumClient.Api.projitems" Label="Shared" Condition="Exists('..\ForumClient.Api\ForumClient.Api.projitems')" />
   <Import Project="..\ForumClient\ForumClient.projitems" Label="Shared" Condition="Exists('..\ForumClient\ForumClient.projitems')" />
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
