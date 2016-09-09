@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
+using System.Security.Cryptography;
 
 namespace ForumClient.Api
 {
@@ -54,7 +55,7 @@ namespace ForumClient.Api
             ForumUrl = url;
         }
 
-        private void PrintNode(int level, HtmlNode basenode)
+        void PrintNode(int level, HtmlNode basenode)
         {
             if (basenode.NodeType == HtmlNodeType.Element)
             {
@@ -68,7 +69,7 @@ namespace ForumClient.Api
             }
         }
 
-        public void PrintHtml(HtmlDocument doc)
+        void PrintHtml(HtmlDocument doc)
         {
             foreach (var node in doc.DocumentNode.ChildNodes)
             {
@@ -76,7 +77,7 @@ namespace ForumClient.Api
             }
         }
 
-        public Author PaseAuthor(HtmlNode node)
+        Author PaseAuthor(HtmlNode node)
         {
             var retval = new Author();
             var href = GetAttributeValue(node, "href");
@@ -85,6 +86,42 @@ namespace ForumClient.Api
             retval.Id = id;
             retval.Name = node.InnerText;
             return retval;
+        }
+
+        public string MD5Password(string password)
+        {
+            var md5 = MD5.Create();
+            var sb = new System.Text.StringBuilder();
+            foreach (var b in md5.ComputeHash(System.Text.Encoding.ASCII.GetBytes(password)))
+            {
+                sb.Append(b.ToString("x2").ToLower());
+            }
+            return sb.ToString();
+        }
+
+        public async Task<bool> SignIn(string username, string password)
+        {
+            var param = new Dictionary<string, string>();
+            param.Add("formhash", "37b0d4e3");
+            param.Add("referer", ForumUrl + "index.php");
+            param.Add("loginfield", "username");
+            param.Add("username", username);
+            param.Add("password", "e10adc3949ba59abbe56e057f20f883e"); //MD5Password(password));
+            param.Add("questionid", "0");
+            param.Add("answer", "");
+            param.Add("loginsubmit", "true");
+            param.Add("cookietime", "2592000");
+            var resp = await c.PostAsync(ForumUrl + "forum/logging.php?action=login&loginsubmit=yes&inajax=1", new FormUrlEncodedContent(param));
+            var data = await resp.Content.ReadAsByteArrayAsync();
+            var text = System.Text.Encoding.GetEncoding("gbk").GetString(data);
+            var doc = new HtmlDocument();
+            doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
+            foreach (var item in resp.Content.Headers)
+            {
+                Console.WriteLine("X [{0}] = [{1}]", item.Key, item.Value);
+            }
+
+            return true;
         }
 
         public async Task<List<Forum>> GetForumList()

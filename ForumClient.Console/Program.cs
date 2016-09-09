@@ -16,6 +16,8 @@ namespace ForumClient
         {
             var client = new Api.Client("http://www.hi-pda.com/");
 
+            await client.SignIn("gamemake", "123456");
+
             /*
             var forumList = await client.GetForumList();
             foreach (var forum in forumList)
@@ -23,11 +25,13 @@ namespace ForumClient
             }
             */
 
+            /*
             var threadList = await client.GetForum("9", 1);
             foreach (var thread in threadList)
             {
                 Console.WriteLine("{0} {1} {2}", thread.Id, thread.Author.Name, thread.Title);
             }
+            */
 
             /*
             var postList = await client.GetThread("1343651", 1);
