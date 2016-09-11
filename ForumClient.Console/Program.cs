@@ -18,12 +18,11 @@ namespace ForumClient
 
             await client.SignIn("gamemake", "123456");
 
-            /*
             var forumList = await client.GetForumList();
             foreach (var forum in forumList)
             {
+                Console.WriteLine("{0}", forum.Title);
             }
-            */
 
             /*
             var threadList = await client.GetForum("9", 1);

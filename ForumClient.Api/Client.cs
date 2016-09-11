@@ -10,7 +10,7 @@ namespace ForumClient.Api
     public class Forum
     {
         public string Id;
-        public string Name;
+        public string Title;
         public string Desc;
     }
 
@@ -42,16 +42,20 @@ namespace ForumClient.Api
     {
         private string ForumUrl;
         private HttpClient c;
-
+        private System.Net.CookieContainer Cookie;
 
         public Client(string url)
         {
+            Cookie = new System.Net.CookieContainer();
             var handler = new HttpClientHandler();
             if (handler.SupportsAutomaticDecompression)
             {
                 handler.AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate;
             }
+            handler.CookieContainer = Cookie;
+            handler.UseCookies = true;
             c = new HttpClient(handler);
+            c.BaseAddress = new Uri(url);
             ForumUrl = url;
         }
 
@@ -88,7 +92,7 @@ namespace ForumClient.Api
             return retval;
         }
 
-        public string MD5Password(string password)
+        string MD5Password(string password)
         {
             var md5 = MD5.Create();
             var sb = new System.Text.StringBuilder();
@@ -97,6 +101,25 @@ namespace ForumClient.Api
                 sb.Append(b.ToString("x2").ToLower());
             }
             return sb.ToString();
+        }
+
+        public void SaveCookies(string filename)
+        {
+            var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            using (var s = System.IO.File.Create(filename))
+            {
+                formatter.Serialize(s, Cookie);
+            }
+        }
+
+        public void LoadCookies(string filename)
+        {
+            var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            using (var s = System.IO.File.OpenRead(filename))
+            {
+                var c = (System.Net.Cookie)formatter.Deserialize(s);
+                Cookie.Add(c);
+            }
         }
 
         public async Task<bool> SignIn(string username, string password)
@@ -113,15 +136,19 @@ namespace ForumClient.Api
             param.Add("cookietime", "2592000");
             var resp = await c.PostAsync(ForumUrl + "forum/logging.php?action=login&loginsubmit=yes&inajax=1", new FormUrlEncodedContent(param));
             var data = await resp.Content.ReadAsByteArrayAsync();
-            var text = System.Text.Encoding.GetEncoding("gbk").GetString(data);
-            var doc = new HtmlDocument();
-            doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
-            foreach (var item in resp.Content.Headers)
+
+            var cookie = resp.Headers.GetValues("Set-Cookie");
+            bool retval = false;
+            foreach (System.Net.Cookie item in Cookie.GetCookies(new Uri(ForumUrl)))
             {
-                Console.WriteLine("X [{0}] = [{1}]", item.Key, item.Value);
+                if(item.Name== "cdb_auth")
+                {
+                    retval = true;
+                    break;
+                }
             }
 
-            return true;
+            return retval;
         }
 
         public async Task<List<Forum>> GetForumList()
@@ -152,7 +179,7 @@ namespace ForumClient.Api
                     var name = a.InnerText;
                     var id = href.Substring(href.IndexOf('=') + 1);
                     if (id.IndexOf('&') > 0) id = id.Substring(0, id.IndexOf('&'));
-                    forums.Add(new Forum() { Id = id, Name = name, Desc = p.InnerText });
+                    forums.Add(new Forum() { Id = id, Title = name, Desc = p.InnerText });
                 }
             }
             return forums;
@@ -161,66 +188,74 @@ namespace ForumClient.Api
         public async Task<List<Thread>> GetForum(string fid, int page)
         {
             var threads = new List<Thread>();
-            var resp = await c.GetAsync(ForumUrl + "forum/forumdisplay.php?fid=" + fid + "&page=" + page.ToString());
-            var data = await resp.Content.ReadAsByteArrayAsync();
-            var doc = new HtmlDocument();
-            doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
-            var html = GetElementByType(doc.DocumentNode, "html");
-            var body = GetElementByType(html, "body");
-            var wrap = GetElementById(body, "div", "wrap");
-            var main = GetElementByClass(wrap, "div", "main");
-            var content = GetElementByClass(main, "div", "content");
-            var threadlist = GetElementById(content, "div", "threadlist");
-            var table = GetElementByType(threadlist, "table");
-            foreach (var tbody in FindElementByType(table, "tbody"))
+
+            try
             {
-                var tr = GetElementByType(tbody, "tr");
-                if (tr == null) continue;
-
-                var th = GetElementByType(tr, "th");
-                if (th == null) continue;
-
-                var max_page = 1;
-                var pages = GetElementByClass(th, "span", "threadpages");
-                if (pages != null)
+                var resp = await c.GetAsync(ForumUrl + "forum/forumdisplay.php?fid=" + fid + "&page=" + page.ToString());
+                var data = await resp.Content.ReadAsByteArrayAsync();
+                var doc = new HtmlDocument();
+                doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
+                var html = GetElementByType(doc.DocumentNode, "html");
+                var body = GetElementByType(html, "body");
+                var wrap = GetElementById(body, "div", "wrap");
+                var main = GetElementByClass(wrap, "div", "main");
+                var content = GetElementByClass(main, "div", "content");
+                var threadlist = GetElementById(content, "div", "threadlist");
+                var table = GetElementByType(threadlist, "table");
+                foreach (var tbody in FindElementByType(table, "tbody"))
                 {
-                    foreach (var page_item in FindElementByType(pages, "a"))
+                    var tr = GetElementByType(tbody, "tr");
+                    if (tr == null) continue;
+
+                    var th = GetElementByType(tr, "th");
+                    if (th == null) continue;
+
+                    var max_page = 1;
+                    var pages = GetElementByClass(th, "span", "threadpages");
+                    if (pages != null)
                     {
-                        var href = GetAttributeValue(page_item, "href");
-                        var ndx = href.Substring(href.LastIndexOf("page=", StringComparison.CurrentCulture) + 5);
-                        if (ndx.IndexOf('&') > 0) ndx = ndx.Substring(0, ndx.IndexOf('&'));
-                        int num = int.Parse(ndx);
-                        if (num > max_page) max_page = num;
+                        foreach (var page_item in FindElementByType(pages, "a"))
+                        {
+                            var href = GetAttributeValue(page_item, "href");
+                            var ndx = href.Substring(href.LastIndexOf("page=", StringComparison.CurrentCulture) + 5);
+                            if (ndx.IndexOf('&') > 0) ndx = ndx.Substring(0, ndx.IndexOf('&'));
+                            int num = int.Parse(ndx);
+                            if (num > max_page) max_page = num;
+                        }
                     }
+
+                    var subject_span = GetElementByType(th, "span");
+                    if (subject_span == null) continue;
+                    var subject_a = GetElementByType(subject_span, "a");
+                    var subject_href = GetAttributeValue(subject_a, "href");
+                    var id = subject_href.Substring(subject_href.IndexOf('=') + 1);
+                    if (id.IndexOf('&') > 0) id = id.Substring(0, id.IndexOf('&'));
+
+                    var author_td = GetElementByClass(tr, "td", "author");
+                    var author_cite = GetElementByType(author_td, "cite");
+                    var author_a = GetElementByType(author_cite, "a");
+                    var author = PaseAuthor(author_a);
+                    var author_em = GetElementByType(author_td, "em");
+
+                    Author l_author = null;
+                    String l_posttime = "";
+                    var last_td = GetElementByClass(tr, "td", "lastpost");
+                    if (last_td != null)
+                    {
+                        var last_cite = GetElementByType(last_td, "cite");
+                        var last_a = GetElementByType(last_cite, "a");
+                        l_author = PaseAuthor(last_a);
+                        var last_em = GetElementByType(last_td, "em");
+                        var last_em_a = GetElementByType(last_em, "a");
+                        l_posttime = last_em_a.InnerText;
+                    }
+
+                    threads.Add(new Thread() { Id = id, Title = subject_a.InnerText, Author = author, PostTime = author_em.InnerText, Last_Author = l_author, Last_PostTime = l_posttime, PageNum = max_page });
                 }
-
-                var subject_span = GetElementByType(th, "span");
-                if (subject_span == null) continue;
-                var subject_a = GetElementByType(subject_span, "a");
-                var subject_href = GetAttributeValue(subject_a, "href");
-                var id = subject_href.Substring(subject_href.IndexOf('=') + 1);
-                if (id.IndexOf('&') > 0) id = id.Substring(0, id.IndexOf('&'));
-
-                var author_td = GetElementByClass(tr, "td", "author");
-                var author_cite = GetElementByType(author_td, "cite");
-                var author_a = GetElementByType(author_cite, "a");
-                var author = PaseAuthor(author_a);
-                var author_em = GetElementByType(author_td, "em");
-
-                Author l_author = null;
-                String l_posttime = "";
-                var last_td = GetElementByClass(tr, "td", "lastpost");
-                if (last_td != null)
-                {
-                    var last_cite = GetElementByType(last_td, "cite");
-                    var last_a = GetElementByType(last_cite, "a");
-                    l_author = PaseAuthor(last_a);
-                    var last_em = GetElementByType(last_td, "em");
-                    var last_em_a = GetElementByType(last_em, "a");
-                    l_posttime = last_em_a.InnerText;
-                }
-
-                threads.Add(new Thread() { Id = id, Title = subject_a.InnerText, Author = author, PostTime = author_em.InnerText, Last_Author = l_author, Last_PostTime = l_posttime, PageNum = max_page });
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
             }
 
             return threads;

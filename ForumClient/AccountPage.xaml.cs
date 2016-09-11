@@ -15,16 +15,18 @@ namespace ForumClient
             var navPage = Parent as NavigationPage;
             await navPage.Navigation.PushAsync(new SettingsPage());
         }
-
+        
         void OnSignIn(object sender, EventArgs e)
         {
-            Application.Current.MainPage = new MainPage();
+            var page = new FirstPage();
+            Application.Current.MainPage = new NavigationPage(page);
+            page.Fech();
         }
 
         async void OnSettings(object sender, EventArgs e)
         {
             var navPage = Parent as NavigationPage;
-            await navPage.Navigation.PushModalAsync(new SettingsPage());
+            await navPage.Navigation.PushAsync(new SettingsPage());
         }
     }
 }

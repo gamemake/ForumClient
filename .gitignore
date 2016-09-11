@@ -7,6 +7,7 @@ ForumClient.Droid/obj
 ForumClient.Console/bin
 ForumClient.Console/obj
 packages
+.vs
 !packages/repositories.config
 *.userprefs
 

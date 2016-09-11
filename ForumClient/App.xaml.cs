@@ -11,6 +11,8 @@ namespace ForumClient
             MainPage = new NavigationPage(new AccountPage());
         }
 
+        public Api.Client client = new Api.Client("http://www.hi-pda.com/");
+
         protected override void OnStart()
         {
             // Handle when your app starts
@@ -27,4 +29,3 @@ namespace ForumClient
         }
     }
 }
-

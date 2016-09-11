@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
@@ -11,6 +11,7 @@
   <ItemGroup>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)App.xaml" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)AccountPage.xaml" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)FirstPage.xaml" />
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)SettingsPage.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </EmbeddedResource>
@@ -30,6 +31,9 @@
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)AccountPage.xaml.cs">
       <DependentUpon>AccountPage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)FirstPage.xaml.cs">
+      <DependentUpon>FirstPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)SettingsPage.xaml.cs">
       <DependentUpon>SettingsPage.xaml</DependentUpon>
