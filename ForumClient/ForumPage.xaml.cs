@@ -29,9 +29,16 @@ namespace ForumClient
             }
         }
 
-        void OnThreadSelected(object sender, SelectedItemChangedEventArgs e)
+        async void OnThreadSelected(object sender, SelectedItemChangedEventArgs e)
         {
-
+            var item = e.SelectedItem as MenuItem;
+            if (item != null)
+            {
+                var navPage = Parent as NavigationPage;
+                var page = new ThreadPage();
+                await navPage.Navigation.PushAsync(page);
+                page.Update(item.SubID);
+            }
         }
     }
 }

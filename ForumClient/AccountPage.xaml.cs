@@ -22,6 +22,10 @@ namespace ForumClient
             var result = await c.SignIn(UsernameEntry.Text, PasswordEntry.Text);
             if (result)
             {
+                var cookie = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "Cookies.bin");
+                c.SaveCookies(cookie);
+
+
                 var page = new FirstPage();
                 var navPage = Parent as NavigationPage;
                 navPage.Navigation.InsertPageBefore(page, this);

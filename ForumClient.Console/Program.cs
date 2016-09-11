@@ -35,19 +35,6 @@ namespace ForumClient
             {
                 Console.WriteLine("Post {0} {1}", post.Author, post.PostTime);
             }
-
-            /*
-            var postList = await client.GetThread("1343651", 1);
-            for (int i = 0; i < postList.Count; i++)
-            {
-                Console.WriteLine("{0} {1}", i + 1, postList[i].Author.Name);
-            }
-            postList = await client.GetThread("1343651", 2);
-            for (int i = 0; i < postList.Count; i++)
-            {
-                Console.WriteLine("{0} {1}", i + 1, postList[i].Author.Name);
-            }
-            */
         }
     }
 }

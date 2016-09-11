@@ -1,8 +1,14 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" x:Class="ForumClient.ThreadPage" Title="Thread">
 	<ContentPage.Content>
-		<StackLayout>
-			<Label Text="Thread Page" />
-		</StackLayout>
+		<ScrollView>
+	        <ListView x:Name="postList" VerticalOptions="Start" SeparatorVisibility="None" ItemSelected="OnPostSelected">
+	          <ListView.ItemTemplate>
+	            <DataTemplate>
+	              <TextCell Text="{Binding Title}" />
+	            </DataTemplate>
+	          </ListView.ItemTemplate>
+	        </ListView>
+		</ScrollView>
 	</ContentPage.Content>
 </ContentPage>

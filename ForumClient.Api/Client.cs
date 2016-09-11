@@ -109,12 +109,11 @@ namespace ForumClient.Api
         public async Task<List<Forum>> GetForumList()
         {
             var forums = new List<Forum>();
-            using (var resp = await c.GetAsync(ForumUrl + "index.php"))
+            using (var resp = await c.GetAsync(ForumUrl + "forum/index.php"))
             {
                 var data = await resp.Content.ReadAsByteArrayAsync();
-//                var text = System.Text.Encoding.GetEncoding("gbk").GetString(data);
                 var doc = new HtmlDocument();
-                doc.Load(new System.IO.MemoryStream(data));//, System.Text.Encoding.GetEncoding("gbk"));
+                doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
                 var html = GetElementByType(doc.DocumentNode, "html");
                 var body = GetElementByType(html, "body");
                 var wrap = GetElementById(body, "div", "wrap");
