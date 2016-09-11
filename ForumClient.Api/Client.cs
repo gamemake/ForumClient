@@ -59,50 +59,6 @@ namespace ForumClient.Api
             ForumUrl = url;
         }
 
-        void PrintNode(int level, HtmlNode basenode)
-        {
-            if (basenode.NodeType == HtmlNodeType.Element)
-            {
-                for (int i = 0; i < level; i++)
-                    Console.Write("      ");
-                Console.WriteLine("{0}-{1}-{2}", basenode.Name, GetAttributeValue(basenode, "id"), GetAttributeValue(basenode, "class"));
-                foreach (var node in basenode.ChildNodes)
-                {
-                    PrintNode(level + 1, node);
-                }
-            }
-        }
-
-        void PrintHtml(HtmlDocument doc)
-        {
-            foreach (var node in doc.DocumentNode.ChildNodes)
-            {
-                PrintNode(0, node);
-            }
-        }
-
-        Author PaseAuthor(HtmlNode node)
-        {
-            var retval = new Author();
-            var href = GetAttributeValue(node, "href");
-            var id = href.Substring(href.IndexOf('=') + 1);
-            if (id.IndexOf('&') > 0) id = id.Substring(0, id.IndexOf('&'));
-            retval.Id = id;
-            retval.Name = node.InnerText;
-            return retval;
-        }
-
-        string MD5Password(string password)
-        {
-            var md5 = MD5.Create();
-            var sb = new System.Text.StringBuilder();
-            foreach (var b in md5.ComputeHash(System.Text.Encoding.ASCII.GetBytes(password)))
-            {
-                sb.Append(b.ToString("x2").ToLower());
-            }
-            return sb.ToString();
-        }
-
         public void SaveCookies(string filename)
         {
             var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
@@ -156,8 +112,9 @@ namespace ForumClient.Api
             using (var resp = await c.GetAsync(ForumUrl + "index.php"))
             {
                 var data = await resp.Content.ReadAsByteArrayAsync();
+//                var text = System.Text.Encoding.GetEncoding("gbk").GetString(data);
                 var doc = new HtmlDocument();
-                doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
+                doc.Load(new System.IO.MemoryStream(data));//, System.Text.Encoding.GetEncoding("gbk"));
                 var html = GetElementByType(doc.DocumentNode, "html");
                 var body = GetElementByType(html, "body");
                 var wrap = GetElementById(body, "div", "wrap");
@@ -326,7 +283,7 @@ namespace ForumClient.Api
             return retval;
         }
 
-        public HtmlNode GetElementByType(HtmlNode basenode, string type)
+        HtmlNode GetElementByType(HtmlNode basenode, string type)
         {
             foreach (var node in basenode.ChildNodes)
             {
@@ -341,7 +298,7 @@ namespace ForumClient.Api
             return null;
         }
 
-        public HtmlNode GetElementById(HtmlNode basenode, string name, string id)
+        HtmlNode GetElementById(HtmlNode basenode, string name, string id)
         {
             foreach (var node in basenode.ChildNodes)
             {
@@ -362,7 +319,7 @@ namespace ForumClient.Api
             return null;
         }
     
-        public HtmlNode GetElementByClass(HtmlNode basenode, string name, string cname)
+        HtmlNode GetElementByClass(HtmlNode basenode, string name, string cname)
         {
             foreach (var node in basenode.ChildNodes)
             {
@@ -383,7 +340,7 @@ namespace ForumClient.Api
             return null;
         }
 
-        public List<HtmlNode> FindElementByType(HtmlNode basenode, string name)
+        List<HtmlNode> FindElementByType(HtmlNode basenode, string name)
         {
             var retval = new List<HtmlNode>();
             foreach (var node in basenode.ChildNodes)
@@ -399,7 +356,7 @@ namespace ForumClient.Api
             return retval;
         }
 
-        public List<HtmlNode> FindElementByClass(HtmlNode basenode, string name, string cname)
+        List<HtmlNode> FindElementByClass(HtmlNode basenode, string name, string cname)
         {
             var retval = new List<HtmlNode>();
             foreach (var node in basenode.ChildNodes)
@@ -422,7 +379,7 @@ namespace ForumClient.Api
             return retval;
         }
 
-        public string GetAttributeValue(HtmlNode basenode, string name)
+        string GetAttributeValue(HtmlNode basenode, string name)
         {
             foreach (var attr in basenode.ChildAttributes(name))
             {
@@ -430,6 +387,50 @@ namespace ForumClient.Api
                     return attr.Value;
             }
             return "none";
+        }
+
+        void PrintNode(int level, HtmlNode basenode)
+        {
+            if (basenode.NodeType == HtmlNodeType.Element)
+            {
+                for (int i = 0; i < level; i++)
+                    Console.Write("      ");
+                Console.WriteLine("{0}-{1}-{2}", basenode.Name, GetAttributeValue(basenode, "id"), GetAttributeValue(basenode, "class"));
+                foreach (var node in basenode.ChildNodes)
+                {
+                    PrintNode(level + 1, node);
+                }
+            }
+        }
+
+        void PrintHtml(HtmlDocument doc)
+        {
+            foreach (var node in doc.DocumentNode.ChildNodes)
+            {
+                PrintNode(0, node);
+            }
+        }
+
+        Author PaseAuthor(HtmlNode node)
+        {
+            var retval = new Author();
+            var href = GetAttributeValue(node, "href");
+            var id = href.Substring(href.IndexOf('=') + 1);
+            if (id.IndexOf('&') > 0) id = id.Substring(0, id.IndexOf('&'));
+            retval.Id = id;
+            retval.Name = node.InnerText;
+            return retval;
+        }
+
+        string MD5Password(string password)
+        {
+            var md5 = MD5.Create();
+            var sb = new System.Text.StringBuilder();
+            foreach (var b in md5.ComputeHash(System.Text.Encoding.ASCII.GetBytes(password)))
+            {
+                sb.Append(b.ToString("x2").ToLower());
+            }
+            return sb.ToString();
         }
     }
 }

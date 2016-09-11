@@ -16,11 +16,23 @@ namespace ForumClient
             await navPage.Navigation.PushAsync(new SettingsPage());
         }
         
-        void OnSignIn(object sender, EventArgs e)
+        async void OnSignIn(object sender, EventArgs e)
         {
-            var page = new FirstPage();
-            Application.Current.MainPage = new NavigationPage(page);
-            page.Fech();
+            var c = (Application.Current as App).client;
+            var result = await c.SignIn(UsernameEntry.Text, PasswordEntry.Text);
+            if (result)
+            {
+                var page = new FirstPage();
+                var navPage = Parent as NavigationPage;
+                navPage.Navigation.InsertPageBefore(page, this);
+                await navPage.Navigation.PopAsync();
+                page.Fech();
+            }
+            else
+            {
+                MessageLabel.Text = "error";
+            }
+            
         }
 
         async void OnSettings(object sender, EventArgs e)

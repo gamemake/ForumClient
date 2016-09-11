@@ -19,7 +19,7 @@ namespace ForumClient
                 forumListData.Add(
                     new MenuItem()
                     {
-                        Title = item.Title,
+                        Title = item.Name,
                         SubID = item.Id
                     }
                     );
@@ -43,7 +43,7 @@ namespace ForumClient
                 var navPage = Parent as NavigationPage;
                 var page = new ForumPage();
                 await navPage.Navigation.PushAsync(page);
-                await page.Update(item.SubID);
+                page.Update(item.SubID);
             }
         }
     }

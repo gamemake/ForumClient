@@ -25,13 +25,7 @@ namespace ForumClient
             threadListData.Clear();
             foreach (var item in list)
             {
-                threadListData.Add(
-                    new MenuItem()
-                    {
-                        Title = item.Title,
-                        SubID = item.Id
-                    }
-                    );
+                threadListData.Add( new MenuItem() { Title = item.Title, SubID = item.Id } );
             }
         }
 
