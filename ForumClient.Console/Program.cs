@@ -21,16 +21,20 @@ namespace ForumClient
             var forumList = await client.GetForumList();
             foreach (var forum in forumList)
             {
-                Console.WriteLine("{0}", forum.Title);
+                Console.WriteLine("Forum {0}", forum.Name);
             }
 
-            /*
             var threadList = await client.GetForum("9", 1);
             foreach (var thread in threadList)
             {
-                Console.WriteLine("{0} {1} {2}", thread.Id, thread.Author.Name, thread.Title);
+                Console.WriteLine("Thread {0} {1} {2}", thread.Id, thread.Author.Name, thread.Title);
             }
-            */
+
+            var postList = await client.GetThread("193801", 1);
+            foreach (var post in postList)
+            {
+                Console.WriteLine("Post {0} {1}", post.Author, post.PostTime);
+            }
 
             /*
             var postList = await client.GetThread("1343651", 1);

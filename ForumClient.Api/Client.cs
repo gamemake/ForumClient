@@ -10,7 +10,7 @@ namespace ForumClient.Api
     public class Forum
     {
         public string Id;
-        public string Title;
+        public string Name;
         public string Desc;
     }
 
@@ -129,57 +129,58 @@ namespace ForumClient.Api
             param.Add("referer", ForumUrl + "index.php");
             param.Add("loginfield", "username");
             param.Add("username", username);
-            param.Add("password", "e10adc3949ba59abbe56e057f20f883e"); //MD5Password(password));
+            param.Add("password", MD5Password(password));
             param.Add("questionid", "0");
             param.Add("answer", "");
             param.Add("loginsubmit", "true");
             param.Add("cookietime", "2592000");
-            var resp = await c.PostAsync(ForumUrl + "forum/logging.php?action=login&loginsubmit=yes&inajax=1", new FormUrlEncodedContent(param));
-            var data = await resp.Content.ReadAsByteArrayAsync();
-
-            var cookie = resp.Headers.GetValues("Set-Cookie");
             bool retval = false;
-            foreach (System.Net.Cookie item in Cookie.GetCookies(new Uri(ForumUrl)))
+            using (var resp = await c.PostAsync(ForumUrl + "forum/logging.php?action=login&loginsubmit=yes&inajax=1", new FormUrlEncodedContent(param)))
             {
-                if(item.Name== "cdb_auth")
+                await resp.Content.ReadAsByteArrayAsync();
+                foreach (System.Net.Cookie item in Cookie.GetCookies(new Uri(ForumUrl)))
                 {
-                    retval = true;
-                    break;
+                    if (item.Name == "cdb_auth")
+                    {
+                        retval = true;
+                        break;
+                    }
                 }
             }
-
             return retval;
         }
 
         public async Task<List<Forum>> GetForumList()
         {
             var forums = new List<Forum>();
-            var resp = await c.GetAsync(ForumUrl + "index.php");
-            var data = await resp.Content.ReadAsByteArrayAsync();
-            var doc = new HtmlDocument();
-            doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
-            var html = GetElementByType(doc.DocumentNode, "html");
-            var body = GetElementByType(html, "body");
-            var wrap = GetElementById(body, "div", "wrap");
-            var main = GetElementByClass(wrap, "div", "main");
-            var content = GetElementByClass(main, "div", "content");
-            foreach (var mainbox in FindElementByClass(content, "div", "mainbox list"))
+            using (var resp = await c.GetAsync(ForumUrl + "index.php"))
             {
-                var table = GetElementByType(mainbox, "table");
-                if (table == null) continue;
-                foreach (var tbody in FindElementByType(table, "tbody"))
+                var data = await resp.Content.ReadAsByteArrayAsync();
+                var doc = new HtmlDocument();
+                doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
+                var html = GetElementByType(doc.DocumentNode, "html");
+                var body = GetElementByType(html, "body");
+                var wrap = GetElementById(body, "div", "wrap");
+                var main = GetElementByClass(wrap, "div", "main");
+                var content = GetElementByClass(main, "div", "content");
+                foreach (var mainbox in FindElementByClass(content, "div", "mainbox list"))
                 {
-                    var tr = GetElementByType(tbody, "tr");
-                    var th = GetElementByType(tr, "th");
-                    var div = GetElementByType(th, "div");
-                    var h2 = GetElementByType(div, "h2");
-                    var a = GetElementByType(h2, "a");
-                    var href = GetAttributeValue(a, "href");
-                    var p = GetElementByType(div, "p");
-                    var name = a.InnerText;
-                    var id = href.Substring(href.IndexOf('=') + 1);
-                    if (id.IndexOf('&') > 0) id = id.Substring(0, id.IndexOf('&'));
-                    forums.Add(new Forum() { Id = id, Title = name, Desc = p.InnerText });
+                    var table = GetElementByType(mainbox, "table");
+                    if (table == null) continue;
+                    foreach (var tbody in FindElementByType(table, "tbody"))
+                    {
+                        var tr = GetElementByType(tbody, "tr");
+                        var th = GetElementByType(tr, "th");
+                        var div = GetElementByType(th, "div");
+                        var h2 = GetElementByType(div, "h2");
+                        var a = GetElementByType(h2, "a");
+                        var href = GetAttributeValue(a, "href");
+                        var p = GetElementByType(div, "p");
+                        var name = a.InnerText;
+                        var id = href.Substring(href.IndexOf('=') + 1);
+                        if (id.IndexOf('&') > 0) id = id.Substring(0, id.IndexOf('&'));
+                        forums.Add(new Forum() { Id = id, Name = name, Desc = p.InnerText });
+                    }
                 }
             }
             return forums;
@@ -189,9 +190,8 @@ namespace ForumClient.Api
         {
             var threads = new List<Thread>();
 
-            try
+            using (var resp = await c.GetAsync(ForumUrl + "forum/forumdisplay.php?fid=" + fid + "&page=" + page.ToString()))
             {
-                var resp = await c.GetAsync(ForumUrl + "forum/forumdisplay.php?fid=" + fid + "&page=" + page.ToString());
                 var data = await resp.Content.ReadAsByteArrayAsync();
                 var doc = new HtmlDocument();
                 doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
@@ -253,82 +253,76 @@ namespace ForumClient.Api
                     threads.Add(new Thread() { Id = id, Title = subject_a.InnerText, Author = author, PostTime = author_em.InnerText, Last_Author = l_author, Last_PostTime = l_posttime, PageNum = max_page });
                 }
             }
-            catch(Exception e)
-            {
-                Console.WriteLine(e.Message);
-            }
-
             return threads;
         }
 
         public async Task<List<Post>> GetThread(string tid, int page)
         {
             var retval = new List<Post>();
-
             var real_url = ForumUrl + "forum/viewthread.php?tid=" + tid + "&extra=page%3D1&page=" + page.ToString();
-
-            var resp = await c.GetAsync(real_url);
-            var data = await resp.Content.ReadAsByteArrayAsync();
-            var doc = new HtmlDocument();
-            doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
-            var html = GetElementByType(doc.DocumentNode, "html");
-            var body = GetElementByType(html, "body");
-            var wrap = GetElementById(body, "div", "wrap");
-            var postlist = GetElementById(wrap, "div", "postlist");
-            foreach (var div in FindElementByType(postlist, "div"))
+            using (var resp = await c.GetAsync(real_url))
             {
-                var table = GetElementByType(div, "table");
-                if (table == null) continue;
-                var tr = GetElementByType(table, "tr");
-                if (tr == null) continue;
-
-                var postauthor = GetElementByClass(tr, "td", "postauthor");
-                var postinfo = GetElementByClass(postauthor, "div", "postinfo");
-                var postinfo_a = GetElementByType(postinfo, "a");
-                var author = PaseAuthor(postinfo_a);
-
-                var postcontent = GetElementByClass(tr, "td", "postcontent");
-
-                var postinfo_1 = GetElementByClass(postcontent, "div", "postinfo");
-                var postinfo_x = GetElementByClass(postinfo_1, "div", "posterinfo");
-                var postinfo_i = GetElementByClass(postinfo_x, "div", "authorinfo");
-                var postinfo_em = GetElementByType(postinfo_i, "em");
-                var posttime = postinfo_em.InnerText;
-                posttime = posttime.Substring(posttime.IndexOf(' ') + 1);
-
-                var defaultpost = GetElementByClass(postcontent, "div", "defaultpost");
-                var postmessage = GetElementByClass(defaultpost, "div", "postmessage firstpost");
-                if (postmessage == null)
+                var data = await resp.Content.ReadAsByteArrayAsync();
+                var doc = new HtmlDocument();
+                doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
+                var html = GetElementByType(doc.DocumentNode, "html");
+                var body = GetElementByType(html, "body");
+                var wrap = GetElementById(body, "div", "wrap");
+                var postlist = GetElementById(wrap, "div", "postlist");
+                foreach (var div in FindElementByType(postlist, "div"))
                 {
-                    postmessage = GetElementByClass(defaultpost, "div", "postmessage ");
-                }
-                string content;
+                    var table = GetElementByType(div, "table");
+                    if (table == null) continue;
+                    var tr = GetElementByType(table, "tr");
+                    if (tr == null) continue;
 
-                var postmessage_div = GetElementByClass(postmessage, "div", "t_msgfontfix");
-                if (postmessage_div != null)
-                {
-                    var postmessage_table = GetElementByType(postmessage_div, "table");
-                    if (postmessage_table == null)
+                    var postauthor = GetElementByClass(tr, "td", "postauthor");
+                    var postinfo = GetElementByClass(postauthor, "div", "postinfo");
+                    var postinfo_a = GetElementByType(postinfo, "a");
+                    var author = PaseAuthor(postinfo_a);
+
+                    var postcontent = GetElementByClass(tr, "td", "postcontent");
+
+                    var postinfo_1 = GetElementByClass(postcontent, "div", "postinfo");
+                    var postinfo_x = GetElementByClass(postinfo_1, "div", "posterinfo");
+                    var postinfo_i = GetElementByClass(postinfo_x, "div", "authorinfo");
+                    var postinfo_em = GetElementByType(postinfo_i, "em");
+                    var posttime = postinfo_em.InnerText;
+                    posttime = posttime.Substring(posttime.IndexOf(' ') + 1);
+
+                    var defaultpost = GetElementByClass(postcontent, "div", "defaultpost");
+                    var postmessage = GetElementByClass(defaultpost, "div", "postmessage firstpost");
+                    if (postmessage == null)
                     {
-                        postmessage_table = null;
+                        postmessage = GetElementByClass(defaultpost, "div", "postmessage ");
                     }
-                    var postmessage_tr = GetElementByType(postmessage_table, "tr");
-                    var postmessage_td = GetElementByType(postmessage_tr, "td");
-                    content = postmessage_td.InnerText;
-                }
-                else
-                {
-                    var postmessage_lock = GetElementByClass(postmessage, "div", "locked");
-                    if (postmessage_lock == null)
-                    {
-                        postmessage_lock = null;
-                    }
-                    content = postmessage_lock.InnerText;
-                }
+                    string content;
 
-                retval.Add(new Post() { Author = author, Content = content, PostTime = posttime });
+                    var postmessage_div = GetElementByClass(postmessage, "div", "t_msgfontfix");
+                    if (postmessage_div != null)
+                    {
+                        var postmessage_table = GetElementByType(postmessage_div, "table");
+                        if (postmessage_table == null)
+                        {
+                            postmessage_table = null;
+                        }
+                        var postmessage_tr = GetElementByType(postmessage_table, "tr");
+                        var postmessage_td = GetElementByType(postmessage_tr, "td");
+                        content = postmessage_td.InnerText;
+                    }
+                    else
+                    {
+                        var postmessage_lock = GetElementByClass(postmessage, "div", "locked");
+                        if (postmessage_lock == null)
+                        {
+                            postmessage_lock = null;
+                        }
+                        content = postmessage_lock.InnerText;
+                    }
+
+                    retval.Add(new Post() { Author = author, Content = content, PostTime = posttime });
+                }
             }
-
             return retval;
         }
 
