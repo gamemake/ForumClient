@@ -30,6 +30,7 @@
     <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
     <MtouchTlsProvider>Default</MtouchTlsProvider>
     <PlatformTarget>x86</PlatformTarget>
+    <MtouchI18n>cjk</MtouchI18n>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhone' ">
     <Optimize>true</Optimize>
@@ -47,6 +48,7 @@
     <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
     <MtouchTlsProvider>Default</MtouchTlsProvider>
     <PlatformTarget>x86</PlatformTarget>
+    <MtouchI18n>cjk</MtouchI18n>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhoneSimulator' ">
     <Optimize>true</Optimize>
@@ -62,6 +64,7 @@
     <MtouchHttpClientHandler>HttpClientHandler</MtouchHttpClientHandler>
     <MtouchTlsProvider>Default</MtouchTlsProvider>
     <PlatformTarget>x86</PlatformTarget>
+    <MtouchI18n>cjk</MtouchI18n>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhone' ">
     <DebugSymbols>true</DebugSymbols>

@@ -23,6 +23,15 @@ namespace ForumClient.Api
         public Author Last_Author;
         public string Last_PostTime;
         public int PageNum;
+        public int ReplyCount;
+        public int ViewCount;
+    }
+
+    public class PostNode
+    {
+        public string NodeType;
+        public string Text;
+        public string HRef;
     }
 
     public class Post
@@ -30,6 +39,7 @@ namespace ForumClient.Api
         public Author Author;
         public string Content;
         public string PostTime;
+        public List<PostNode> Nodes;
     }
 
     public class Author
@@ -73,8 +83,13 @@ namespace ForumClient.Api
             var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
             using (var s = System.IO.File.OpenRead(filename))
             {
-                var c = (System.Net.Cookie)formatter.Deserialize(s);
-                Cookie.Add(c);
+                var v = formatter.Deserialize(s);
+                var c = v as System.Net.CookieContainer;
+                foreach (var item in c.GetCookies(new Uri(ForumUrl)))
+                {
+                    var d = item as System.Net.Cookie;
+                    Cookie.Add(d);
+                }
             }
         }
 
@@ -126,12 +141,19 @@ namespace ForumClient.Api
                     foreach (var tbody in FindElementByType(table, "tbody"))
                     {
                         var tr = GetElementByType(tbody, "tr");
+                        if (tr == null) continue;
                         var th = GetElementByType(tr, "th");
+                        if (th == null) continue;
                         var div = GetElementByType(th, "div");
+                        if (div == null) continue;
                         var h2 = GetElementByType(div, "h2");
+                        if (h2 == null) continue;
                         var a = GetElementByType(h2, "a");
+                        if (a == null) continue;
                         var href = GetAttributeValue(a, "href");
+                        if (href == null) continue;
                         var p = GetElementByType(div, "p");
+                        if (p == null) continue;
                         var name = a.InnerText;
                         var id = href.Substring(href.IndexOf('=') + 1);
                         if (id.IndexOf('&') > 0) id = id.Substring(0, id.IndexOf('&'));
@@ -252,7 +274,9 @@ namespace ForumClient.Api
                     {
                         postmessage = GetElementByClass(defaultpost, "div", "postmessage ");
                     }
-                    string content;
+
+                    string content = "";
+                    var nodes = new List<PostNode>();
 
                     var postmessage_div = GetElementByClass(postmessage, "div", "t_msgfontfix");
                     if (postmessage_div != null)
@@ -264,7 +288,17 @@ namespace ForumClient.Api
                         }
                         var postmessage_tr = GetElementByType(postmessage_table, "tr");
                         var postmessage_td = GetElementByType(postmessage_tr, "td");
+
+                        ParseHtmlNode(nodes, postmessage_td);
                         content = postmessage_td.InnerText;
+                        /*
+                        var builder = new System.Text.StringBuilder();
+                        ParseHtmlNode(builder, postmessage_td);
+                        content = builder.ToString();
+                        Console.WriteLine("============================");
+                        Console.WriteLine(content);
+                        Console.WriteLine("============================");
+                        */
                     }
                     else
                     {
@@ -274,9 +308,14 @@ namespace ForumClient.Api
                             postmessage_lock = null;
                         }
                         content = postmessage_lock.InnerText;
+                        nodes.Add(new PostNode()
+                        {
+                            NodeType = "text",
+                            Text = content
+                        });
                     }
 
-                    retval.Add(new Post() { Author = author, Content = content, PostTime = posttime });
+                    retval.Add(new Post() { Author = author, Content = content, PostTime = posttime, Nodes = nodes });
                 }
             }
             return retval;
@@ -317,7 +356,7 @@ namespace ForumClient.Api
             }
             return null;
         }
-    
+
         HtmlNode GetElementByClass(HtmlNode basenode, string name, string cname)
         {
             foreach (var node in basenode.ChildNodes)
@@ -385,7 +424,7 @@ namespace ForumClient.Api
                 if (attr.Name == name)
                     return attr.Value;
             }
-            return "none";
+            return "";
         }
 
         void PrintNode(int level, HtmlNode basenode)
@@ -394,7 +433,9 @@ namespace ForumClient.Api
             {
                 for (int i = 0; i < level; i++)
                     Console.Write("      ");
-                Console.WriteLine("{0}-{1}-{2}", basenode.Name, GetAttributeValue(basenode, "id"), GetAttributeValue(basenode, "class"));
+                var text = basenode.InnerHtml.Replace("\n", "");
+                if (text.Length > 20) text = text.Substring(0, 20);
+                Console.WriteLine("{0}-{1}-{2}-{3}", basenode.Name, GetAttributeValue(basenode, "id"), GetAttributeValue(basenode, "class"), text);
                 foreach (var node in basenode.ChildNodes)
                 {
                     PrintNode(level + 1, node);
@@ -413,11 +454,19 @@ namespace ForumClient.Api
         Author PaseAuthor(HtmlNode node)
         {
             var retval = new Author();
-            var href = GetAttributeValue(node, "href");
-            var id = href.Substring(href.IndexOf('=') + 1);
-            if (id.IndexOf('&') > 0) id = id.Substring(0, id.IndexOf('&'));
-            retval.Id = id;
-            retval.Name = node.InnerText;
+            retval.Name = "UNKNOWN";
+            retval.Id = "0";
+            if (node != null)
+            {
+                var href = GetAttributeValue(node, "href");
+                if (href != null)
+                {
+                    var id = href.Substring(href.IndexOf('=') + 1);
+                    if (id.IndexOf('&') > 0) id = id.Substring(0, id.IndexOf('&'));
+                    retval.Id = id;
+                    retval.Name = node.InnerText;
+                }
+            }
             return retval;
         }
 
@@ -430,6 +479,165 @@ namespace ForumClient.Api
                 sb.Append(b.ToString("x2").ToLower());
             }
             return sb.ToString();
+        }
+
+        void ParseHtmlNode(System.Text.StringBuilder builder, HtmlNode basenode)
+        {
+            if (basenode.NodeType == HtmlNodeType.Element)
+            {
+                if (basenode.Name == "div" && GetAttributeValue(basenode, "class") == "t_attach")
+                {
+                    return;
+                }
+                if (basenode.Name == "a")
+                {
+                    var href = GetAttributeValue(basenode, "href");
+                    HtmlNode firstnode = null;
+                    if (basenode.ChildNodes.Count > 0)
+                    {
+                        firstnode = basenode.ChildNodes[0];
+                    }
+                    if (firstnode != null)
+                    {
+                        builder.Append("link: " + href + " text: " + firstnode.InnerText);
+                    }
+                    else
+                    {
+                        builder.Append("link: " + href + " text: none");
+                    }
+                    builder.Append("\n");
+                    return;
+                }
+                if (basenode.Name == "img")
+                {
+                    var src = GetAttributeValue(basenode, "file").Trim();
+                    if (src == "")
+                    {
+                        src = GetAttributeValue(basenode, "src").Trim();
+                    }
+                    builder.Append("image: " + src);
+                    builder.Append("\n");
+                    return;
+                }
+                if (basenode.Name == "span" && GetAttributeValue(basenode, "style") == "position: absolute; display: none")
+                {
+                    return;
+                }
+            }
+
+            if (basenode.NodeType == HtmlNodeType.Text)
+            {
+                var text = basenode.InnerText.Replace("&nbsp;", " ").Trim();
+                if (text.Length > 0)
+                {
+                    var lines = basenode.InnerText.Split(new char['\n']);
+                    bool first = false;
+                    foreach (var line in lines)
+                    {
+                        if (!first) builder.Append(" ");
+                        first = true;
+                        builder.Append(line.Trim());
+                    }
+                    builder.Append("\n");
+                }
+            }
+
+            foreach (var node in basenode.ChildNodes)
+            {
+                ParseHtmlNode(builder, node);
+            }
+        }
+
+        void ParseHtmlNode(List<PostNode> nodes, HtmlNode basenode)
+        {
+            if (basenode.NodeType == HtmlNodeType.Element)
+            {
+                if (basenode.Name == "div" && GetAttributeValue(basenode, "class") == "t_attach")
+                {
+                    return;
+                }
+                if (basenode.Name == "a")
+                {
+                    var href = GetAttributeValue(basenode, "href");
+                    HtmlNode firstnode = null;
+                    if (basenode.ChildNodes.Count > 0)
+                    {
+                        firstnode = basenode.ChildNodes[0];
+                    }
+                    if (firstnode != null)
+                    {
+                        nodes.Add(new PostNode()
+                        {
+                            NodeType = "link",
+                            HRef = href,
+                            Text = firstnode.InnerText
+                        });
+                    }
+                    else
+                    {
+                        nodes.Add(new PostNode()
+                        {
+                            NodeType = "link",
+                            HRef = href,
+                            Text = ""
+                        });
+                    }
+                    return;
+                }
+                if (basenode.Name == "img")
+                {
+                    var src = GetAttributeValue(basenode, "file").Trim();
+                    if (src == "")
+                    {
+                        src = GetAttributeValue(basenode, "src").Trim();
+                    }
+                    nodes.Add(new PostNode()
+                    {
+                        NodeType = "image",
+                        HRef = src
+                    });
+                    return;
+                }
+                if (basenode.Name == "span" && GetAttributeValue(basenode, "style") == "position: absolute; display: none")
+                {
+                    return;
+                }
+            }
+
+            if (basenode.NodeType == HtmlNodeType.Text)
+            {
+                var text = basenode.InnerText;
+                text = text.Replace("\r", "");
+                text = text.Replace("\n", "");
+                if (text.IndexOf("nbsp", StringComparison.CurrentCulture) >= 0)
+                {
+                    text = text.Replace("&nbsp;", " ");
+                }
+                text = text.Replace("&nbsp;", " ");
+                text = text.Trim();
+                if (text.Length > 0)
+                {
+                    var lines = basenode.InnerText.Split(new char['\n']);
+                    bool first = true;
+                    var builder = new System.Text.StringBuilder();
+                    foreach (var line in lines)
+                    {
+                        if (!first) builder.Append(" ");
+                        first = false;
+                        builder.Append(line.Trim());
+                    }
+                    nodes.Add(new PostNode()
+                    {
+                        NodeType = "text",
+                        Text = builder.ToString()
+                    });
+                }
+            }
+
+            foreach (var node in basenode.ChildNodes)
+            {
+                ParseHtmlNode(nodes, node);
+            }
         }
     }
 }

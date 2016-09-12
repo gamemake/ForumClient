@@ -30,7 +30,7 @@ namespace ForumClient
                 Console.WriteLine("Thread {0} {1} {2}", thread.Id, thread.Author.Name, thread.Title);
             }
 
-            var postList = await client.GetThread("193801", 1);
+            var postList = await client.GetThread("1941378", 1);
             foreach (var post in postList)
             {
                 Console.WriteLine("Post {0} {1}", post.Author, post.PostTime);

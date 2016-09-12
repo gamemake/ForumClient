@@ -8,12 +8,20 @@ namespace ForumClient
 {
     public partial class ForumPage : ContentPage
     {
-        ObservableCollection<MenuItem> threadListData;
+        private class ThreadMenuItem : MenuItem
+        {
+            public string Title { get; set; }
+            public string SubID { get; set; }
+            public string PageInfo { get; set; }
+            public string PostInfo { get; set; }
+            public string LastPostInfo { get; set; }
+        }
+        ObservableCollection<ThreadMenuItem> threadListData;
 
         public ForumPage()
         {
             InitializeComponent();
-            threadListData = new ObservableCollection<MenuItem>();
+            threadListData = new ObservableCollection<ThreadMenuItem>();
             threadList.ItemsSource = threadListData;
         }
 
@@ -25,13 +33,19 @@ namespace ForumClient
             threadListData.Clear();
             foreach (var item in list)
             {
-                threadListData.Add( new MenuItem() { Title = item.Title, SubID = item.Id } );
+                string postInfo = item.Author.Name + " " + item.PostTime;
+                string lastInfo = "";
+                if (item.Last_Author != null)
+                {
+                    lastInfo = item.Last_Author.Name + " " + item.Last_PostTime;
+                }
+                threadListData.Add(new ThreadMenuItem() { Title = item.Title, SubID = item.Id, PageInfo="10/10", PostInfo = postInfo, LastPostInfo = lastInfo });
             }
         }
 
         async void OnThreadSelected(object sender, SelectedItemChangedEventArgs e)
         {
-            var item = e.SelectedItem as MenuItem;
+            var item = e.SelectedItem as ThreadMenuItem;
             if (item != null)
             {
                 var navPage = Parent as NavigationPage;

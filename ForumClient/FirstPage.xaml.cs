@@ -8,7 +8,13 @@ namespace ForumClient
 {
     public partial class FirstPage : ContentPage
     {
-        ObservableCollection<MenuItem> forumListData;
+        class ForumMenuItem : MenuItem
+        {
+            public string Title { get; set; }
+            public string Description { get; set; }
+            public string SubID { get; set; }
+        }
+        ObservableCollection<ForumMenuItem> forumListData;
 
         public async void Fech()
         {
@@ -16,13 +22,7 @@ namespace ForumClient
             var list = await c.GetForumList();
             foreach (var item in list)
             {
-                forumListData.Add(
-                    new MenuItem()
-                    {
-                        Title = item.Name,
-                        SubID = item.Id
-                    }
-                    );
+                forumListData.Add( new ForumMenuItem() { Title = item.Name, Description = item.Desc, SubID = item.Id, } );
             }
         }
 
@@ -30,13 +30,13 @@ namespace ForumClient
         {
             InitializeComponent();
 
-            forumListData = new ObservableCollection<MenuItem>();
+            forumListData = new ObservableCollection<ForumMenuItem>();
             forumList.ItemsSource = forumListData;
         }
 
         async void OnForumSelected(object sender, SelectedItemChangedEventArgs e)
         {
-            var item = e.SelectedItem as MenuItem;
+            var item = e.SelectedItem as ForumMenuItem;
             if (item != null)
             {
                 forumList.SelectedItem = null;
