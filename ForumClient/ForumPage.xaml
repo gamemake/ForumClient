@@ -8,11 +8,15 @@
 						<DataTemplate>
 							<ViewCell>
 								<StackLayout Spacing="0">
-									<Label Text="{Binding Title}" LineBreakMode="TailTruncation" VerticalTextAlignment="Center" VerticalOptions="CenterAndExpand" />
+									<StackLayout Orientation="Horizontal" Spacing="0" VerticalOptions="CenterAndExpand">
+										<Label Text="{Binding Title}" FontAttributes="Bold" LineBreakMode="TailTruncation" VerticalTextAlignment="Center" HorizontalOptions="FillAndExpand" />
+										<BoxView WidthRequest="5" BackgroundColor="Transparent" HorizontalOptions="End" />
+										<Label Text=">" FontAttributes="Bold" VerticalTextAlignment="Center" HorizontalOptions="End" />
+									</StackLayout>
 									<StackLayout Orientation="Horizontal" Spacing="0" VerticalOptions="End">
-										<Label Text="{Binding PostInfo}" HorizontalOptions="Start" FontSize="10" />
-										<Label Text="{Binding PageInfo}" HorizontalTextAlignment="Center" HorizontalOptions="CenterAndExpand" FontSize="10" />
-										<Label Text="{Binding LastPostInfo}" HorizontalOptions="End" FontSize="10" />
+										<Label Text="{Binding PostInfo}" FontSize="10" HorizontalOptions="Start" />
+										<Label Text="{Binding PageInfo}" FontSize="10" HorizontalTextAlignment="Center" HorizontalOptions="CenterAndExpand" />
+										<Label Text="{Binding LastPostInfo}" FontSize="10" HorizontalOptions="End" />
 									</StackLayout>
 								</StackLayout>
 							</ViewCell>
