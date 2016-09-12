@@ -40,6 +40,7 @@ namespace ForumClient
             if (item != null)
             {
                 forumList.SelectedItem = null;
+
                 var navPage = Parent as NavigationPage;
                 var page = new ForumPage();
                 await navPage.Navigation.PushAsync(page);

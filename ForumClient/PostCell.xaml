@@ -2,7 +2,7 @@
 <StackLayout xmlns="http://xamarin.com/schemas/2014/forms" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" x:Class="ForumClient.PostCell" Orientation="Horizontal"
 		HorizontalOptions="FillAndExpand"
 		>
-	<StackLayout BackgroundColor="Silver" x:Name="content" HorizontalOptions="FillAndExpand">
+	<StackLayout x:Name="content" HorizontalOptions="FillAndExpand">
 		<StackLayout Orientation="Horizontal" BackgroundColor="Gray" HorizontalOptions="FillAndExpand">
 			<Label FontSize="10" Text="{Binding AuthorName}" HorizontalOptions="Start" />
 			<Label FontSize="10" Text="" HorizontalOptions="CenterAndExpand" />

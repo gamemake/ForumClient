@@ -48,6 +48,8 @@ namespace ForumClient
             var item = e.SelectedItem as ThreadMenuItem;
             if (item != null)
             {
+                threadList.SelectedItem = null;
+
                 var navPage = Parent as NavigationPage;
                 var page = new ThreadPage();
                 await navPage.Navigation.PushAsync(page);

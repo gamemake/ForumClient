@@ -3,7 +3,7 @@
 	<ContentPage.Content>
 		<ScrollView>
 			<ScrollView.Content>
-				<ListView x:Name="threadList" VerticalOptions="Start" SeparatorVisibility="None" ItemSelected="OnThreadSelected">
+				<ListView x:Name="threadList" VerticalOptions="Start" ItemSelected="OnThreadSelected">
 					<ListView.ItemTemplate>
 						<DataTemplate>
 							<ViewCell>
