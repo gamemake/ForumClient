@@ -62,7 +62,7 @@ namespace ForumClient.Api
             var CookieFile = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "Cookies.bin");
             if (System.IO.File.Exists(CookieFile))
             {
-                // LoadCookies(CookieFile);
+                LoadCookies(CookieFile);
             }
 
             var handler = new HttpClientHandler();

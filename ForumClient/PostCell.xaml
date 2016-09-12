@@ -1,11 +1,9 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<StackLayout xmlns="http://xamarin.com/schemas/2014/forms" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" x:Class="ForumClient.PostCell" Orientation="Horizontal"
-		HorizontalOptions="FillAndExpand"
-		>
-	<StackLayout x:Name="content" HorizontalOptions="FillAndExpand">
-		<StackLayout Orientation="Horizontal" BackgroundColor="Gray" HorizontalOptions="FillAndExpand">
+<StackLayout xmlns="http://xamarin.com/schemas/2014/forms" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" x:Class="ForumClient.PostCell" Orientation="Horizontal" Spacing="0">
+	<StackLayout x:Name="content" HorizontalOptions="FillAndExpand" Spacing="0">
+		<StackLayout Orientation="Horizontal" BackgroundColor="Gray">
 			<Label FontSize="10" Text="{Binding AuthorName}" HorizontalOptions="Start" />
-			<Label FontSize="10" Text="" HorizontalOptions="CenterAndExpand" />
+			<Label FontSize="10" Text="" HorizontalOptions="FillAndExpand" />
 			<Label FontSize="10" Text="{Binding PostTime}" HorizontalOptions="End" />
 		</StackLayout>
 	</StackLayout>
