@@ -16,6 +16,7 @@ namespace ForumClient.Api
 
     public class Thread
     {
+        public bool OnTop = false;
         public string Id;
         public string Title;
         public Author Author;
@@ -56,7 +57,14 @@ namespace ForumClient.Api
 
         public Client(string url)
         {
+            ForumUrl = url;
             Cookie = new System.Net.CookieContainer();
+            var CookieFile = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "Cookies.bin");
+            if (System.IO.File.Exists(CookieFile))
+            {
+                // LoadCookies(CookieFile);
+            }
+
             var handler = new HttpClientHandler();
             if (handler.SupportsAutomaticDecompression)
             {
@@ -66,7 +74,18 @@ namespace ForumClient.Api
             handler.UseCookies = true;
             c = new HttpClient(handler);
             c.BaseAddress = new Uri(url);
-            ForumUrl = url;
+        }
+
+        public bool IsAuthed()
+        {
+            foreach (System.Net.Cookie item in Cookie.GetCookies(new Uri(ForumUrl)))
+            {
+                if (item.Name == "cdb_auth")
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public void SaveCookies(string filename)
@@ -93,7 +112,7 @@ namespace ForumClient.Api
             }
         }
 
-        public async Task<bool> SignIn(string username, string password)
+        public async Task<string> SignIn(string username, string password)
         {
             var param = new Dictionary<string, string>();
             param.Add("formhash", "37b0d4e3");
@@ -105,20 +124,41 @@ namespace ForumClient.Api
             param.Add("answer", "");
             param.Add("loginsubmit", "true");
             param.Add("cookietime", "2592000");
-            bool retval = false;
+            string error;
             using (var resp = await c.PostAsync(ForumUrl + "forum/logging.php?action=login&loginsubmit=yes&inajax=1", new FormUrlEncodedContent(param)))
             {
-                await resp.Content.ReadAsByteArrayAsync();
-                foreach (System.Net.Cookie item in Cookie.GetCookies(new Uri(ForumUrl)))
+                var data = await resp.Content.ReadAsByteArrayAsync();
+                var text = System.Text.Encoding.GetEncoding("gbk").GetString(data);
+                if (text.IndexOf(ForumUrl, StringComparison.CurrentCulture) > 0)
                 {
-                    if (item.Name == "cdb_auth")
-                    {
-                        retval = true;
-                        break;
-                    }
+                    error = "";
+                }
+                else
+                {
+                    if (text.IndexOf("CDATA[", StringComparison.CurrentCulture) > 0) text = text.Substring(text.IndexOf("CDATA[", StringComparison.CurrentCulture) + 6);
+                    if (text.IndexOf("]]", StringComparison.CurrentCulture) > 0) text = text.Substring(0, text.IndexOf("]]", StringComparison.CurrentCulture));
+                    error = text;
                 }
             }
-            return retval;
+
+            if (!IsAuthed() && error == "")
+            {
+                return "unkown error";
+            }
+            else
+            {
+                return error;
+            }
+        }
+
+        public async Task<bool> SignOut()
+        {
+            bool result = true;
+            using (var resp = await c.GetAsync(ForumUrl + "forum/logging.php?action=logout&formhash=420b6ba6"))
+            {
+                await resp.Content.ReadAsByteArrayAsync();
+            }
+            return result;
         }
 
         public async Task<List<Forum>> GetForumList()
@@ -180,6 +220,7 @@ namespace ForumClient.Api
                 var content = GetElementByClass(main, "div", "content");
                 var threadlist = GetElementById(content, "div", "threadlist");
                 var table = GetElementByType(threadlist, "table");
+                var OnTop = true;
                 foreach (var tbody in FindElementByType(table, "tbody"))
                 {
                     var tr = GetElementByType(tbody, "tr");
@@ -187,6 +228,12 @@ namespace ForumClient.Api
 
                     var th = GetElementByType(tr, "th");
                     if (th == null) continue;
+
+                    if (GetAttributeValue(th, "class") == "subject")
+                    {
+                        OnTop = false;
+                        continue;
+                    }
 
                     var max_page = 1;
                     var pages = GetElementByClass(th, "span", "threadpages");
@@ -228,7 +275,7 @@ namespace ForumClient.Api
                         l_posttime = last_em_a.InnerText;
                     }
 
-                    threads.Add(new Thread() { Id = id, Title = subject_a.InnerText, Author = author, PostTime = author_em.InnerText, Last_Author = l_author, Last_PostTime = l_posttime, PageNum = max_page });
+                    threads.Add(new Thread() { OnTop = OnTop, Id = id, Title = subject_a.InnerText, Author = author, PostTime = author_em.InnerText, Last_Author = l_author, Last_PostTime = l_posttime, PageNum = max_page });
                 }
             }
             return threads;

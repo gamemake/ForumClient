@@ -7,12 +7,9 @@ namespace ForumClient
         public App()
         {
             InitializeComponent();
-            var cookie = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "Cookies.bin");
-            if (System.IO.File.Exists(cookie))
-            {
-                var c = (Application.Current as App).client;
-                c.LoadCookies(cookie);
 
+            if (client.IsAuthed())
+            {
                 var page = new FirstPage();
                 MainPage = new NavigationPage(page);
                 page.Fech();

@@ -10,11 +10,61 @@ namespace ForumClient
     {
         private class ThreadMenuItem : MenuItem
         {
-            public string Title { get; set; }
-            public string SubID { get; set; }
-            public string PageInfo { get; set; }
-            public string PostInfo { get; set; }
-            public string LastPostInfo { get; set; }
+            public Api.Thread Data;
+            public ThreadMenuItem(Api.Thread Data)
+            {
+                this.Data = Data;
+            }
+
+            public string Title
+            {
+                get
+                {
+                    if (Data.OnTop)
+                    {
+                        return "[OnTop] " + Data.Title;
+                    }
+                    else
+                    {
+                        return Data.Title;
+                    }
+                }
+            }
+            public string SubID
+            {
+                get
+                {
+                    return Data.Id;
+                }
+            }
+            public string PageInfo
+            {
+                get
+                {
+                    return "10/10";       
+                }
+            }
+            public string PostInfo
+            {
+                get
+                {
+                    return Data.Author.Name + " " + Data.PostTime;
+                }
+            }
+            public string LastPostInfo
+            {
+                get
+                {
+                    if (Data.Last_Author != null)
+                    {
+                        return Data.Last_Author.Name + " " + Data.Last_PostTime;
+                    }
+                    else
+                    {
+                        return "";
+                    }
+                }
+            }
         }
         ObservableCollection<ThreadMenuItem> threadListData;
 
@@ -33,13 +83,7 @@ namespace ForumClient
             threadListData.Clear();
             foreach (var item in list)
             {
-                string postInfo = item.Author.Name + " " + item.PostTime;
-                string lastInfo = "";
-                if (item.Last_Author != null)
-                {
-                    lastInfo = item.Last_Author.Name + " " + item.Last_PostTime;
-                }
-                threadListData.Add(new ThreadMenuItem() { Title = item.Title, SubID = item.Id, PageInfo="10/10", PostInfo = postInfo, LastPostInfo = lastInfo });
+                threadListData.Add(new ThreadMenuItem(item));
             }
         }
 

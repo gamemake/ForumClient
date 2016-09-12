@@ -9,10 +9,11 @@
 			<Entry x:Name="UsernameEntry" Placeholder="Please input username" />
 			<Label Text="Password" />
 			<Entry x:Name="PasswordEntry" Placeholder="Please input password" IsPassword="true" />
-			<Button Text="Login" Clicked="OnSignIn" />
-			<Label x:Name="MessageLabel" />
-			<BoxView HeightRequest="10" />
-			<Button Text="Settings" Clicked="OnSettings" />
+			<Label x:Name="MessageLabel" TextColor="Red" HorizontalOptions="FillAndExpand" HorizontalTextAlignment="Center" />
+			<StackLayout Orientation="Horizontal">
+				<Button Text="Anonymous" Clicked="OnAnonymousLogin" HorizontalOptions="StartAndExpand" />
+				<Button Text="Login" Clicked="OnSignIn" HorizontalOptions="EndAndExpand" />
+			</StackLayout>
 		</StackLayout>
 	</ContentPage.Content>
 </ContentPage>

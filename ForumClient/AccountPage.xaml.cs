@@ -8,6 +8,7 @@ namespace ForumClient
         public AccountPage()
         {
             InitializeComponent();
+            UsernameEntry.Keyboard = Keyboard.Create(0);
         }
 
         async void OnSignUp(object sender, EventArgs e)
@@ -20,23 +21,26 @@ namespace ForumClient
         {
             var c = (Application.Current as App).client;
             var result = await c.SignIn(UsernameEntry.Text, PasswordEntry.Text);
-            if (result)
+            if (result=="")
             {
                 var cookie = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "Cookies.bin");
                 c.SaveCookies(cookie);
-
-
-                var page = new FirstPage();
-                var navPage = Parent as NavigationPage;
-                navPage.Navigation.InsertPageBefore(page, this);
-                await navPage.Navigation.PopAsync();
-                page.Fech();
+                OnAnonymousLogin(sender, e);
             }
             else
             {
-                MessageLabel.Text = "error";
+                MessageLabel.Text = result;
             }
             
+        }
+
+        async void OnAnonymousLogin(object sender, EventArgs e)
+        {
+            var page = new FirstPage();
+            var navPage = Parent as NavigationPage;
+            navPage.Navigation.InsertPageBefore(page, this);
+            await navPage.Navigation.PopAsync();
+            page.Fech();
         }
 
         async void OnSettings(object sender, EventArgs e)
