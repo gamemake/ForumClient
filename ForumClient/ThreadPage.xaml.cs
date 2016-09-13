@@ -57,7 +57,7 @@ namespace ForumClient
                     }
                     if (node.NodeType == "link")
                     {
-                        var link = new Label() { Text = node.Text, LineBreakMode=LineBreakMode.TailTruncation, TextColor = Color.Blue, FontSize = 10, HorizontalOptions = LayoutOptions.Start };
+                        var link = new Label() { Text = node.Text, LineBreakMode=LineBreakMode.TailTruncation, TextColor = Color.Blue, HorizontalOptions = LayoutOptions.Start };
                         link.GestureRecognizers.Add(new TapGestureRecognizer() { Command = new Command(() => { }) });
                         content.Children.Add(link);
                     }
