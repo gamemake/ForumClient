@@ -21,9 +21,6 @@
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)ThreadPage.xaml">
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </EmbeddedResource>
-    <EmbeddedResource Include="$(MSBuildThisFileDirectory)PostCell.xaml">
-      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
@@ -43,9 +40,6 @@
     </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)ThreadPage.xaml.cs">
       <DependentUpon>ThreadPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)PostCell.xaml.cs">
-      <DependentUpon>PostCell.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

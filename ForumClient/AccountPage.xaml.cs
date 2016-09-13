@@ -37,9 +37,13 @@ namespace ForumClient
         async void OnAnonymousLogin(object sender, EventArgs e)
         {
             var page = new FirstPage();
+#if __ANDROID__
+            Application.Current.MainPage = new NavigationPage(page);
+#else
             var navPage = Parent as NavigationPage;
             navPage.Navigation.InsertPageBefore(page, this);
             await navPage.Navigation.PopAsync();
+#endif
             page.Fech();
         }
 
