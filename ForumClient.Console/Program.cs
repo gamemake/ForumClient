@@ -9,7 +9,7 @@ namespace ForumClient
         {
             DoTest();
             Console.WriteLine("Press any key to exit...");
-            Console.ReadLine();            
+            Console.ReadLine();
         }
 
         private static async void DoTest()

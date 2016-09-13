@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:local="clr-namespace:ForumClient" x:Class="ForumClient.ForumPage" Title="板块"  Padding="10,5">
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:local="clr-namespace:ForumClient" x:Class="ForumClient.ForumPage" Title="板块" Padding="10,5">
 	<ContentPage.Content>
 		<ListView x:Name="threadList" VerticalOptions="FillAndExpand" ItemSelected="OnThreadSelected" SeparatorVisibility="None">
 			<ListView.ItemTemplate>
@@ -8,12 +8,12 @@
 						<StackLayout Spacing="0">
 							<StackLayout Orientation="Horizontal" Spacing="0" StackLayout.VerticalOptions="CenterAndExpand">
 								<Label Text="{Binding Title}" FontAttributes="Bold" LineBreakMode="TailTruncation" VerticalTextAlignment="Center" HorizontalOptions="StartAndExpand" />
-								<Label Text=" "		          FontAttributes="Bold" 	                           VerticalTextAlignment="Center" HorizontalOptions="End" />
-								<Label Text=">"			      FontAttributes="Bold" 	                           VerticalTextAlignment="Center" HorizontalOptions="End" />
+								<Label Text=" " FontAttributes="Bold" VerticalTextAlignment="Center" HorizontalOptions="End" />
+								<Label Text="&gt;" FontAttributes="Bold" VerticalTextAlignment="Center" HorizontalOptions="End" />
 							</StackLayout>
 							<StackLayout Orientation="Horizontal" Spacing="0" StackLayout.VerticalOptions="End">
-								<Label Text="{Binding PostInfo}"	 TextColor="Gray" FontSize="10" HorizontalOptions="Start" />
-								<Label Text=""						 TextColor="Gray" FontSize="10" HorizontalOptions="FillAndExpand" />
+								<Label Text="{Binding PostInfo}" TextColor="Gray" FontSize="10" HorizontalOptions="Start" />
+								<Label Text="" TextColor="Gray" FontSize="10" HorizontalOptions="FillAndExpand" />
 								<Label Text="{Binding LastPostInfo}" TextColor="Gray" FontSize="10" HorizontalOptions="End" />
 							</StackLayout>
 						</StackLayout>

@@ -16,12 +16,12 @@ namespace ForumClient
             var navPage = Parent as NavigationPage;
             await navPage.Navigation.PushAsync(new SettingsPage());
         }
-        
+
         async void OnSignIn(object sender, EventArgs e)
         {
             var c = (Application.Current as App).client;
             var result = await c.SignIn(UsernameEntry.Text, PasswordEntry.Text);
-            if (result=="")
+            if (result == "")
             {
                 var cookie = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "Cookies.bin");
                 c.SaveCookies(cookie);
@@ -31,7 +31,6 @@ namespace ForumClient
             {
                 MessageLabel.Text = result;
             }
-            
         }
 
         async void OnAnonymousLogin(object sender, EventArgs e)

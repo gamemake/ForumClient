@@ -22,7 +22,7 @@ namespace ForumClient
             var list = await c.GetForumList();
             foreach (var item in list)
             {
-                forumListData.Add( new ForumMenuItem() { Title = item.Name, Description = item.Desc, SubID = item.Id, } );
+                forumListData.Add(new ForumMenuItem() { Title = item.Name, Description = item.Desc, SubID = item.Id });
             }
         }
 

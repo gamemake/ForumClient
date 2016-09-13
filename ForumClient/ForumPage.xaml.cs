@@ -41,7 +41,7 @@ namespace ForumClient
             {
                 get
                 {
-                    return "10/10";       
+                    return "10/10";
                 }
             }
             public string PostInfo
