@@ -1,0 +1,87 @@
+
+{
+	"base_url" : "",
+	"login_url" : "",
+	"logout_url" : "",
+	"forum_url" : "",
+	"thread_url" : "",
+	"post_url" : "",
+	"cookie_check" : "",
+	"login_messge" : "",
+	"forum_list" : {
+		"forum_root" : [
+			{ "type" : "html", "id": "",     "class": "" },
+			{ "type" : "body", "id": "",     "class": "" },
+			{ "type" : "div",  "id": "wrap", "class": "" },
+			{ "type" : "div",  "id": "",     "class": "post" }
+		],
+		"forum_start" : [
+			{ "type" : "table", "id": "",     "class": "" },
+			{ "type" : "tr",    "id": "",     "class": "" }
+		],
+		"forum_id" : [
+		],
+		"forum_title" : [
+		],
+		"forum_desc" : [
+		]
+	},
+	"thread_list" : {
+		"thread_root" : [
+			{ "type" : "html", "id": "",     "class": "" },
+			{ "type" : "body", "id": "",     "class": "" },
+			{ "type" : "div",  "id": "wrap", "class": "" },
+			{ "type" : "div",  "id": "",     "class": "post" }
+		],
+		"thread_start" : [
+			{ "type" : "table", "id": "",     "class": "" },
+			{ "type" : "tr",    "id": "",     "class": "" }
+		],
+		"thread_default" : [
+		],
+		"thread_id" : [
+		],
+		"thread_title" : [
+		],
+		"post_auth_name" : [
+		],
+		"post_auth_id" : [
+		],
+		"post_time" : [
+		],
+		"last_auth_name" : [
+		],
+		"last_auth_id" : [
+		],
+		"last_time" : [
+		]
+	},
+	"post_list" : {
+		"post_root" : [
+			{ "type" : "html", "id": "",     "class": "" },
+			{ "type" : "body", "id": "",     "class": "" },
+			{ "type" : "div",  "id": "wrap", "class": "" },
+			{ "type" : "div",  "id": "",     "class": "post" }
+		],
+		"post_start" : [
+			{ "type" : "table", "id": "",     "class": "" },
+			{ "type" : "tr",    "id": "",     "class": "" }
+		],
+		"post_id" : [
+		],
+		"post_auth_name" : [
+		],
+		"post_auth_id" : [
+		],
+		"post_time" : [
+		],
+		"content_1" : [
+			{ "type" : "table", "id": "",     "class": "" },
+			{ "type" : "tr",    "id": "",     "class": "" }
+		],
+		"content_2" : [
+			{ "type" : "table", "id": "",     "class": "" },
+			{ "type" : "tr",    "id": "",     "class": "" }
+		]
+	}
+}

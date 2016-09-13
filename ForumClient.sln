@@ -23,9 +23,9 @@ Global
 		ForumClient.Api\ForumClient.Api.projitems*{677c9f3f-0710-41e4-af4c-587a6f797466}*SharedItemsImports = 13
 		ForumClient.Api\ForumClient.Api.projitems*{6ff02893-59f1-4568-873a-c9ce5c58fbfa}*SharedItemsImports = 4
 		HtmlAgilityPack\HtmlAgilityPack.projitems*{6ff02893-59f1-4568-873a-c9ce5c58fbfa}*SharedItemsImports = 4
-		ForumClient.Api\ForumClient.Api.projitems*{9bf23afe-e497-41ba-90a5-1a43bc8dfa39}*SharedItemsImports = 4
-		ForumClient\ForumClient.projitems*{9bf23afe-e497-41ba-90a5-1a43bc8dfa39}*SharedItemsImports = 4
-		HtmlAgilityPack\HtmlAgilityPack.projitems*{9bf23afe-e497-41ba-90a5-1a43bc8dfa39}*SharedItemsImports = 4
+		ForumClient.Api\ForumClient.Api.projitems*{b7928711-1317-4143-a21a-6a67a2fac3a2}*SharedItemsImports = 4
+		ForumClient\ForumClient.projitems*{b7928711-1317-4143-a21a-6a67a2fac3a2}*SharedItemsImports = 4
+		HtmlAgilityPack\HtmlAgilityPack.projitems*{b7928711-1317-4143-a21a-6a67a2fac3a2}*SharedItemsImports = 4
 		ForumClient\ForumClient.projitems*{d4701ea6-5fde-45fd-8a9d-19b056b5470c}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

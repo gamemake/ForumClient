@@ -7,6 +7,31 @@ using System.Security.Cryptography;
 
 namespace ForumClient.Api
 {
+    public interface IForumFetch
+    {
+        void Begin();
+        void NewForum(string Id, string Name, string Desc);
+        void End();
+    }
+
+    public interface IThreadFetch
+    {
+        void Begin();
+        void NewThread(bool OnTop, string Id, string Title, Author PostMan, string PostTime, Author LastMan, string LastTime);
+        void End();
+    }
+
+    public interface IPostFetch
+    {
+        void Begin();
+        void BeginPost(string Id, Author PostMan, string PostTime);
+        void NewText(string Text);
+        void NewLink(string Url, string Text);
+        void NewImage(string Url);
+        void EndPost(string Id, Author PostMan, string PostTime);
+        void End();
+    }
+
     public class Forum
     {
         public string Id;
@@ -338,14 +363,6 @@ namespace ForumClient.Api
 
                         ParseHtmlNode(nodes, postmessage_td);
                         content = postmessage_td.InnerText;
-                        /*
-                        var builder = new System.Text.StringBuilder();
-                        ParseHtmlNode(builder, postmessage_td);
-                        content = builder.ToString();
-                        Console.WriteLine("============================");
-                        Console.WriteLine(content);
-                        Console.WriteLine("============================");
-                        */
                     }
                     else
                     {
