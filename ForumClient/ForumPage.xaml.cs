@@ -66,24 +66,38 @@ namespace ForumClient
                 }
             }
         }
+
         ObservableCollection<ThreadMenuItem> threadListData;
+        string currentForumId;
 
         public ForumPage()
         {
             InitializeComponent();
             threadListData = new ObservableCollection<ThreadMenuItem>();
             threadList.ItemsSource = threadListData;
+            threadList.RefreshCommand = new Command(PullToRefresh);
         }
 
-        public async void Update(string forumId)
+        public async void Fetch(string forumId, int page)
         {
             var c = (Application.Current as App).client;
-            var list = await c.GetForum(forumId, 1);
+            if (page < 1) page = 1;
+            currentForumId = forumId;
+            var list = await c.GetForum(forumId, page);
 
-            threadListData.Clear();
+            if (page == 1)
+            {
+                threadListData = new ObservableCollection<ThreadMenuItem>();
+            }
+
             foreach (var item in list)
             {
                 threadListData.Add(new ThreadMenuItem(item));
+            }
+
+            if (page == 1)
+            {
+                threadList.ItemsSource = threadListData;
             }
         }
 
@@ -99,6 +113,19 @@ namespace ForumClient
                 await navPage.Navigation.PushAsync(page);
                 page.Update(item.SubID);
             }
+        }
+
+        async void PullToRefresh()
+        {
+            var c = (Application.Current as App).client;
+            var list = await c.GetForum(currentForumId, 1);
+            threadListData = new ObservableCollection<ThreadMenuItem>();
+            foreach (var item in list)
+            {
+                threadListData.Add(new ThreadMenuItem(item));
+            }
+            threadList.ItemsSource = threadListData;
+            threadList.EndRefresh();
         }
     }
 }

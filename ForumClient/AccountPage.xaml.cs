@@ -43,7 +43,7 @@ namespace ForumClient
             navPage.Navigation.InsertPageBefore(page, this);
             await navPage.Navigation.PopAsync();
 #endif
-            page.Fech();
+            page.Fetch();
         }
 
         async void OnSettings(object sender, EventArgs e)

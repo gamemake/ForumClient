@@ -12,7 +12,7 @@ namespace ForumClient
             {
                 var page = new FirstPage();
                 MainPage = new NavigationPage(page);
-                page.Fech();
+                page.Fetch();
             }
             else
             {
