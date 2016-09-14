@@ -38,25 +38,40 @@ namespace ForumClient
         public async void Fetch()
         {
             var c = (Application.Current as App).client;
+
+            var start = DateTime.UtcNow;
             var list = await c.GetForumList();
+            Console.WriteLine("GetForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+
             var forumListData = new ObservableCollection<ForumMenuItem>();
             foreach (var item in list)
             {
                 forumListData.Add(new ForumMenuItem() { Title = item.Name, Description = item.Desc, SubID = item.Id });
             }
+
+            start = DateTime.UtcNow;
             forumList.ItemsSource = forumListData;
+            Console.WriteLine("UpdateForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
         }
 
         public async void PullToRefresh()
         {
             var c = (Application.Current as App).client;
+
+            var start = DateTime.UtcNow;
             var list = await c.GetForumList();
+            Console.WriteLine("GetForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+
             var forumListData = new ObservableCollection<ForumMenuItem>();
             foreach (var item in list)
             {
                 forumListData.Add(new ForumMenuItem() { Title = item.Name, Description = item.Desc, SubID = item.Id });
             }
+
+            start = DateTime.UtcNow;
             forumList.ItemsSource = forumListData;
+            Console.WriteLine("UpdateForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+
             forumList.EndRefresh();
         }
     }
