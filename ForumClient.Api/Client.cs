@@ -245,7 +245,6 @@ namespace ForumClient.Api
                 var content = GetElementByClass(main, "div", "content");
                 var threadlist = GetElementById(content, "div", "threadlist");
                 var table = GetElementByType(threadlist, "table");
-                var OnTop = true;
                 foreach (var tbody in FindElementByType(table, "tbody"))
                 {
                     var tr = GetElementByType(tbody, "tr");
@@ -256,7 +255,10 @@ namespace ForumClient.Api
 
                     if (GetAttributeValue(th, "class") == "subject")
                     {
-                        OnTop = false;
+                        foreach (var t in threads)
+                        {
+                            t.OnTop = true;
+                        }
                         continue;
                     }
 
@@ -300,7 +302,7 @@ namespace ForumClient.Api
                         l_posttime = last_em_a.InnerText;
                     }
 
-                    threads.Add(new Thread() { OnTop = OnTop, Id = id, Title = subject_a.InnerText, Author = author, PostTime = author_em.InnerText, Last_Author = l_author, Last_PostTime = l_posttime, PageNum = max_page });
+                    threads.Add(new Thread() { OnTop = false, Id = id, Title = subject_a.InnerText, Author = author, PostTime = author_em.InnerText, Last_Author = l_author, Last_PostTime = l_posttime, PageNum = max_page });
                 }
             }
             return threads;
