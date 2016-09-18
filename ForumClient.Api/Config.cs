@@ -25,6 +25,7 @@ namespace ForumClient.Api
         public string login_messge;
 
         public List<ConfigItem> forum_root = new List<ConfigItem>();
+        public List<ConfigItem> forum_category = new List<ConfigItem>();
         public List<ConfigItem> forum_start = new List<ConfigItem>();
         public List<ConfigItem> forum_id = new List<ConfigItem>();
         public List<ConfigItem> forum_title = new List<ConfigItem>();
@@ -78,6 +79,7 @@ namespace ForumClient.Api
                         var retval = new Config();
 
                         retval.text_encoder = JsonRoot["text_encoder"].ToString();
+                        retval.base_url = JsonRoot["base_url"].ToString();
                         retval.login_url = JsonRoot["login_url"].ToString();
                         retval.logout_url = JsonRoot["logout_url"].ToString();
                         retval.forumlist_url = JsonRoot["forumlist_url"].ToString();
@@ -88,6 +90,7 @@ namespace ForumClient.Api
 
                         var forum_list = JsonRoot["forum_list"] as JObject;
                         retval.forum_root = GetList(forum_list["forum_root"] as JArray);
+                        retval.forum_category = GetList(forum_list["forum_category"] as JArray);
                         retval.forum_start = GetList(forum_list["forum_start"] as JArray);
                         retval.forum_id = GetList(forum_list["forum_id"] as JArray);
                         retval.forum_title = GetList(forum_list["forum_title"] as JArray);
@@ -107,14 +110,14 @@ namespace ForumClient.Api
                         retval.thread_last_time = GetList(thread_list["last_time"] as JArray);
 
                         var post_list = JsonRoot["post_list"];
-                        retval.post_root = GetList(thread_list["post_root"] as JArray);
-                        retval.post_start = GetList(thread_list["post_start"] as JArray);
-                        retval.post_id = GetList(thread_list["post_id"] as JArray);
-                        retval.post_auth_name = GetList(thread_list["post_auth_name"] as JArray);
-                        retval.post_auth_id = GetList(thread_list["post_auth_id"] as JArray);
-                        retval.post_time = GetList(thread_list["post_time"] as JArray);
-                        retval.post_content_1 = GetList(thread_list["content_1"] as JArray);
-                        retval.post_content_2 = GetList(thread_list["content_2"] as JArray);
+                        retval.post_root = GetList(post_list["post_root"] as JArray);
+                        retval.post_start = GetList(post_list["post_start"] as JArray);
+                        retval.post_id = GetList(post_list["post_id"] as JArray);
+                        retval.post_auth_name = GetList(post_list["post_auth_name"] as JArray);
+                        retval.post_auth_id = GetList(post_list["post_auth_id"] as JArray);
+                        retval.post_time = GetList(post_list["post_time"] as JArray);
+                        retval.post_content_1 = GetList(post_list["content_1"] as JArray);
+                        retval.post_content_2 = GetList(post_list["content_2"] as JArray);
 
                         return retval;
                     }

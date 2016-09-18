@@ -1,6 +1,6 @@
 
 {
-	"html_encoder" : "gbk",
+	"text_encoder" : "gbk",
 	"base_url" : "http://www.hi-pda.com",
 	"login_url" : "http://www.hi-pda.com/forum/logging.php?action=login&loginsubmit=yes&inajax=1",
 	"logout_url" : "http://www.hi-pda.com/forum/logging.php?action=logout&formhash=420b6ba6",
@@ -14,17 +14,33 @@
 			{ "type" : "html", "id": "",     "class": "" },
 			{ "type" : "body", "id": "",     "class": "" },
 			{ "type" : "div",  "id": "wrap", "class": "" },
-			{ "type" : "div",  "id": "",     "class": "post" }
+			{ "type" : "div",  "id": "",     "class": "main" },
+			{ "type" : "div",  "id": "",     "class": "content" }
+		],
+		"forum_category" : [
+			{ "type" : "div",  "id": "",     "class": "mainbox list" },
+			{ "type" : "table","id": "",     "class": "" }
 		],
 		"forum_start" : [
-			{ "type" : "table", "id": "",     "class": "" },
-			{ "type" : "tr",    "id": "",     "class": "" }
+			{ "type" : "tbody","id": "",     "class": "" },
+			{ "type" : "tr",   "id": "",     "class": "" }
 		],
 		"forum_id" : [
+			{ "type" : "th",   "id": "",     "class": "" },
+			{ "type" : "div",  "id": "",     "class": "" },
+			{ "type" : "h2",   "id": "",     "class": "" },
+			{ "type" : "a",    "id": "",     "class": "" }
 		],
 		"forum_title" : [
+			{ "type" : "th",   "id": "",     "class": "" },
+			{ "type" : "div",  "id": "",     "class": "" },
+			{ "type" : "h2",   "id": "",     "class": "" },
+			{ "type" : "a",    "id": "",     "class": "" }
 		],
 		"forum_desc" : [
+			{ "type" : "th",   "id": "",     "class": "" },
+			{ "type" : "div",  "id": "",     "class": "" },
+			{ "type" : "p",    "id": "",     "class": "" }
 		]
 	},
 	"thread_list" : {
@@ -32,29 +48,55 @@
 			{ "type" : "html", "id": "",     "class": "" },
 			{ "type" : "body", "id": "",     "class": "" },
 			{ "type" : "div",  "id": "wrap", "class": "" },
-			{ "type" : "div",  "id": "",     "class": "post" }
+			{ "type" : "div",  "id": "", 	 "class": "main" },
+			{ "type" : "div",  "id": "", 	 "class": "content" },
+			{ "type" : "div",  "id": "threadlist", "class": "" },
+			{ "type" : "table","id": "",     "class": "" }
 		],
 		"thread_start" : [
-			{ "type" : "table", "id": "",     "class": "" },
-			{ "type" : "tr",    "id": "",     "class": "" }
+			{ "type" : "tbody","id": "",     "class": "" },
+			{ "type" : "tr",   "id": "",     "class": "" }
 		],
 		"thread_default" : [
+			{ "type" : "th",   "id": "",     "class": "subject" }
 		],
 		"thread_id" : [
+			{ "type" : "th",   "id": "",     "class": "" },
+			{ "type" : "span", "id": "",     "class": "" },
+			{ "type" : "a",    "id": "",     "class": "" }
 		],
 		"thread_title" : [
+			{ "type" : "th",   "id": "",     "class": "" },
+			{ "type" : "span", "id": "",     "class": "" },
+			{ "type" : "a",    "id": "",     "class": "" }
 		],
 		"post_auth_name" : [
+			{ "type" : "td",   "id": "",     "class": "author" },
+			{ "type" : "cite", "id": "",     "class": "" },
+			{ "type" : "a",    "id": "",     "class": "" }
 		],
 		"post_auth_id" : [
+			{ "type" : "td",   "id": "",     "class": "author" },
+			{ "type" : "cite", "id": "",     "class": "" },
+			{ "type" : "a",    "id": "",     "class": "" }
 		],
 		"post_time" : [
+			{ "type" : "td",   "id": "",     "class": "author" },
+			{ "type" : "em",   "id": "",     "class": "" }
 		],
 		"last_auth_name" : [
+			{ "type" : "td",   "id": "",     "class": "lastpost" },
+			{ "type" : "cite", "id": "",     "class": "" },
+			{ "type" : "a",    "id": "",     "class": "" }
 		],
 		"last_auth_id" : [
+			{ "type" : "td",   "id": "",     "class": "lastpost" },
+			{ "type" : "cite", "id": "",     "class": "" },
+			{ "type" : "a",    "id": "",     "class": "" }
 		],
 		"last_time" : [
+			{ "type" : "td",   "id": "",     "class": "lastpost" },
+			{ "type" : "em",   "id": "",     "class": "" }
 		]
 	},
 	"post_list" : {
@@ -62,27 +104,53 @@
 			{ "type" : "html", "id": "",     "class": "" },
 			{ "type" : "body", "id": "",     "class": "" },
 			{ "type" : "div",  "id": "wrap", "class": "" },
-			{ "type" : "div",  "id": "",     "class": "post" }
+			{ "type" : "div",  "id": "postlist", "class": "" }
 		],
 		"post_start" : [
+			{ "type" : "div", "id": "",     "class": "" },
 			{ "type" : "table", "id": "",     "class": "" },
 			{ "type" : "tr",    "id": "",     "class": "" }
 		],
 		"post_id" : [
+			{ "type" : "td", "id": "",     "class": "postcontent" },
+			{ "type" : "div", "id": "",     "class": "postinfo" },
+			{ "type" : "strong", "id": "",     "class": "" },
+			{ "type" : "a", "id": "",     "class": "" }
 		],
 		"post_auth_name" : [
+			{ "type" : "td", "id": "",     "class": "postauthor" },
+			{ "type" : "div", "id": "",     "class": "postinfo" },
+			{ "type" : "a", "id": "",     "class": "" }
 		],
 		"post_auth_id" : [
+			{ "type" : "td", "id": "",     "class": "postauthor" },
+			{ "type" : "div", "id": "",     "class": "postinfo" },
+			{ "type" : "a", "id": "",     "class": "" }
 		],
 		"post_time" : [
+			{ "type" : "td", "id": "",     "class": "postcontent" },
+			{ "type" : "div", "id": "",     "class": "postinfo" },
+			{ "type" : "div", "id": "",     "class": "posterinfo" },
+			{ "type" : "div", "id": "",     "class": "authorinfo" },
+			{ "type" : "em", "id": "",     "class": "" }
 		],
 		"content_1" : [
+			{ "type" : "td", "id": "",     "class": "postcontent" },
+			{ "type" : "div", "id": "",     "class": "defaultpost" },
+			{ "type" : "div", "id": "",     "class": "" },
+			{ "type" : "div", "id": "",     "class": "t_msgfontfix" },
 			{ "type" : "table", "id": "",     "class": "" },
-			{ "type" : "tr",    "id": "",     "class": "" }
+			{ "type" : "tr", "id": "",     "class": "" },
+			{ "type" : "td", "id": "",     "class": "t_msgfont" }
 		],
 		"content_2" : [
+			{ "type" : "td", "id": "",     "class": "postcontent" },
+			{ "type" : "div", "id": "",     "class": "defaultpost" },
+			{ "type" : "div", "id": "",     "class": "" },
+			{ "type" : "div", "id": "",     "class": "locked" },
 			{ "type" : "table", "id": "",     "class": "" },
-			{ "type" : "tr",    "id": "",     "class": "" }
+			{ "type" : "tr", "id": "",     "class": "" },
+			{ "type" : "td", "id": "",     "class": "t_msgfont" }
 		]
 	}
 }

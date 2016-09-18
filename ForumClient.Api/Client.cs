@@ -48,7 +48,6 @@ namespace ForumClient.Api
         public string PostTime;
         public Author Last_Author = new Author();
         public string Last_PostTime;
-        public int PageNum;
         public int ReplyCount;
         public int ViewCount;
     }
@@ -200,27 +199,33 @@ namespace ForumClient.Api
                 var forum_root = GetElement(doc.DocumentNode, config.forum_root, 0);
                 if (forum_root != null)
                 {
-                    foreach (var child in forum_root.ChildNodes)
+                    foreach (var child1 in forum_root.ChildNodes)
                     {
-                        var forum_start = GetElement(child, config.forum_start);
-                        if (forum_start == null) continue;
+                        var forum_category = GetElement(child1, config.forum_category);
+                        if (forum_category == null) continue;
 
-                        var forum = new Forum();
-                        HtmlNode node;
+                        foreach (var child in forum_category.ChildNodes)
+                        {
+                            var forum_start = GetElement(child, config.forum_start);
+                            if (forum_start == null) continue;
 
-                        node = GetElement(forum_start, config.forum_id);
-                        if (node == null) continue;
-                        forum.Id = node.InnerText;
+                            var forum = new Forum();
+                            HtmlNode node;
 
-                        node = GetElement(forum_start, config.forum_title);
-                        if (node == null) continue;
-                        forum.Name = node.InnerText;
+                            node = GetElement(forum_start, config.forum_id, 0);
+                            if (node == null) continue;
+                            forum.Id = GetUrlString(GetAttributeValue(node, "href"), "fid=", "&");
 
-                        node = GetElement(forum_start, config.forum_desc);
-                        if (node == null) continue;
-                        forum.Desc = node.InnerText;
+                            node = GetElement(forum_start, config.forum_title, 0);
+                            if (node == null) continue;
+                            forum.Name = node.InnerText;
 
-                        forums.Add(forum);
+                            node = GetElement(forum_start, config.forum_desc, 0);
+                            if (node == null) continue;
+                            forum.Desc = node.InnerText;
+
+                            forums.Add(forum);
+                        }
                     }
                 }
             }
@@ -257,37 +262,39 @@ namespace ForumClient.Api
                         var thread = new Thread();
                         HtmlNode node;
 
-                        node = GetElement(child, config.thread_id);
+                        node = GetElement(thread_start, config.thread_id, 0);
                         if (node == null) continue;
-                        thread.Id = node.InnerText;
+                        thread.Id = GetUrlString(GetAttributeValue(node, "href"), "tid=", "&");
 
-                        node = GetElement(child, config.thread_title);
+                        node = GetElement(thread_start, config.thread_title, 0);
                         if (node == null) continue;
                         thread.Title = node.InnerText;
 
-                        node = GetElement(child, config.thread_post_auth_name);
+                        node = GetElement(thread_start, config.thread_post_auth_name, 0);
                         if (node == null) continue;
                         thread.Author.Name = node.InnerText;
 
-                        node = GetElement(child, config.thread_post_auth_id);
+                        node = GetElement(thread_start, config.thread_post_auth_id, 0);
                         if (node == null) continue;
-                        thread.Author.Id = node.InnerText;
+                        thread.Author.Id = GetUrlString(GetAttributeValue(node, "href"), "uid=", "&");
 
-                        node = GetElement(child, config.thread_post_time);
+                        node = GetElement(thread_start, config.thread_post_time, 0);
                         if (node == null) continue;
                         thread.PostTime = node.InnerText;
 
-                        node = GetElement(child, config.thread_last_auth_name);
+                        node = GetElement(thread_start, config.thread_last_auth_name, 0);
                         if (node != null)
-                            thread.Author.Name = node.InnerText;
+                            thread.Last_Author.Name = node.InnerText;
 
-                        node = GetElement(child, config.thread_last_auth_id);
+                        node = GetElement(thread_start, config.thread_last_auth_id, 0);
                         if (node != null)
-                            thread.Author.Id = node.InnerText;
+                            thread.Last_Author.Id = GetUrlString(GetAttributeValue(node, "href"), "username=", "&");
 
-                        node = GetElement(child, config.thread_last_time);
+                        node = GetElement(thread_start, config.thread_last_time, 0);
                         if (node != null)
-                            thread.PostTime = node.InnerText;
+                            thread.Last_PostTime = node.InnerText;
+
+                        threads.Add(thread);
                     }
                 }
             }
@@ -310,29 +317,31 @@ namespace ForumClient.Api
                     var post_start = GetElement(child, config.post_start);
                     if (post_start == null) continue;
 
+                    PrintNode(0, post_start);
+
                     var post = new Post();
                     HtmlNode node;
 
-                    node = GetElement(post_start, config.post_id);
+                    node = GetElement(post_start, config.post_id, 0);
                     if (node == null) continue;
                     post.Id = node.InnerText;
 
-                    node = GetElement(post_start, config.post_auth_name);
+                    node = GetElement(post_start, config.post_auth_name, 0);
                     if (node == null) continue;
                     post.Id = node.InnerText;
 
-                    node = GetElement(post_start, config.post_auth_id);
+                    node = GetElement(post_start, config.post_auth_id, 0);
                     if (node == null) continue;
-                    post.Id = node.InnerText;
+                    post.Author.Name = GetUrlString(GetAttributeValue(node, "href"), "uid=", "&");
 
-                    node = GetElement(post_start, config.post_time);
+                    node = GetElement(post_start, config.post_time, 0);
                     if (node == null) continue;
-                    post.Id = node.InnerText;
+                    post.PostTime = node.InnerText;
 
-                    node = GetElement(post_start, config.post_content_1);
+                    node = GetElement(post_start, config.post_content_1, 0);
                     if (node == null)
                     {
-                        node = GetElement(post_start, config.post_content_2);
+                        node = GetElement(post_start, config.post_content_2, 0);
                         if (node == null) continue;
                     }
                     ParseHtmlNode(post.Nodes, node);
@@ -358,8 +367,8 @@ namespace ForumClient.Api
         {
             if (node.NodeType != HtmlNodeType.Element) return false;
             if (!string.IsNullOrEmpty(item._type) && item._type != node.Name) return false;
-            if (!string.IsNullOrEmpty(item._id) && item._type != GetAttributeValue(node, "id")) return false;
-            if (!string.IsNullOrEmpty(item._class) && item._type != GetAttributeValue(node, "class")) return false;
+            if (!string.IsNullOrEmpty(item._id) && item._id != GetAttributeValue(node, "id")) return false;
+            if (!string.IsNullOrEmpty(item._class) && item._class != GetAttributeValue(node, "class")) return false;
             return true;
         }
 
@@ -371,17 +380,24 @@ namespace ForumClient.Api
 
         HtmlNode GetElement(HtmlNode root, List<ConfigItem> list, int index)
         {
+            if (index == list.Count) return root;
             foreach (var node in root.ChildNodes)
             {
                 if (!CheckElement(node, list[index])) continue;
-
-                if (index < list.Count - 1)
-                {
-                    return GetElement(node, list, index + 1);
-                }
-                return node;
+                var retval = GetElement(node, list, index + 1);
+                if (retval != null) return retval;
             }
             return null;
+        }
+
+        string GetUrlString(string url, string start, string end)
+        {
+            var retval = url;
+            int pos = retval.IndexOf(start, StringComparison.CurrentCulture);
+            if (pos >= 0) retval = retval.Substring(pos + start.Length);
+            pos = retval.IndexOf(end, StringComparison.CurrentCulture);
+            if (pos >= 0) retval = retval.Substring(0, pos);
+            return retval;
         }
 
         void PrintNode(int level, HtmlNode basenode)
