@@ -44,9 +44,9 @@ namespace ForumClient.Api
         public bool OnTop = false;
         public string Id;
         public string Title;
-        public Author Author;
+        public Author Author = new Author();
         public string PostTime;
-        public Author Last_Author;
+        public Author Last_Author = new Author();
         public string Last_PostTime;
         public int PageNum;
         public int ReplyCount;
@@ -62,10 +62,11 @@ namespace ForumClient.Api
 
     public class Post
     {
-        public Author Author;
+        public string Id;
+        public Author Author = new Author();
         public string Content;
         public string PostTime;
-        public List<PostNode> Nodes;
+        public List<PostNode> Nodes = new List<PostNode>();
     }
 
     public class Author
@@ -76,18 +77,19 @@ namespace ForumClient.Api
 
     public class Client
     {
-        private string ForumUrl;
-        private HttpClient c;
-        private System.Net.CookieContainer Cookie;
+        private Config config;
+        private string cookie_file;
+        private System.Net.CookieContainer cookies;
+        private HttpClient client;
 
-        public Client(string url)
+        public Client(string name, Config config)
         {
-            ForumUrl = url;
-            Cookie = new System.Net.CookieContainer();
-            var CookieFile = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "Cookies.bin");
-            if (System.IO.File.Exists(CookieFile))
+            this.config = config;
+            this.cookie_file = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "Cookies-" + name + ".bin");
+            this.cookies = new System.Net.CookieContainer();
+            if (System.IO.File.Exists(this.cookie_file))
             {
-                LoadCookies(CookieFile);
+                LoadCookies(this.cookie_file);
             }
 
             var handler = new HttpClientHandler();
@@ -95,15 +97,15 @@ namespace ForumClient.Api
             {
                 handler.AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate;
             }
-            handler.CookieContainer = Cookie;
+            handler.CookieContainer = this.cookies;
             handler.UseCookies = true;
-            c = new HttpClient(handler);
-            c.BaseAddress = new Uri(url);
+            client = new HttpClient(handler);
+            client.BaseAddress = new Uri(this.config.base_url);
         }
 
         public bool IsAuthed()
         {
-            foreach (System.Net.Cookie item in Cookie.GetCookies(new Uri(ForumUrl)))
+            foreach (System.Net.Cookie item in cookies.GetCookies(new Uri(config.base_url)))
             {
                 if (item.Name == "cdb_auth")
                 {
@@ -118,7 +120,7 @@ namespace ForumClient.Api
             var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
             using (var s = System.IO.File.Create(filename))
             {
-                formatter.Serialize(s, Cookie);
+                formatter.Serialize(s, cookies);
             }
         }
 
@@ -129,10 +131,10 @@ namespace ForumClient.Api
             {
                 var v = formatter.Deserialize(s);
                 var c = v as System.Net.CookieContainer;
-                foreach (var item in c.GetCookies(new Uri(ForumUrl)))
+                foreach (var item in c.GetCookies(new Uri(config.base_url)))
                 {
                     var d = item as System.Net.Cookie;
-                    Cookie.Add(d);
+                    cookies.Add(d);
                 }
             }
         }
@@ -141,7 +143,7 @@ namespace ForumClient.Api
         {
             var param = new Dictionary<string, string>();
             param.Add("formhash", "37b0d4e3");
-            param.Add("referer", ForumUrl + "index.php");
+            param.Add("referer", config.forumlist_url);
             param.Add("loginfield", "username");
             param.Add("username", username);
             param.Add("password", MD5Password(password));
@@ -150,11 +152,11 @@ namespace ForumClient.Api
             param.Add("loginsubmit", "true");
             param.Add("cookietime", "2592000");
             string error;
-            using (var resp = await c.PostAsync(ForumUrl + "forum/logging.php?action=login&loginsubmit=yes&inajax=1", new FormUrlEncodedContent(param)))
+            using (var resp = await client.PostAsync(config.login_url, new FormUrlEncodedContent(param)))
             {
                 var data = await resp.Content.ReadAsByteArrayAsync();
-                var text = System.Text.Encoding.GetEncoding("gbk").GetString(data);
-                if (text.IndexOf(ForumUrl, StringComparison.CurrentCulture) > 0)
+                var text = System.Text.Encoding.GetEncoding(config.text_encoder).GetString(data);
+                if (text.IndexOf(config.forumlist_url, StringComparison.CurrentCulture) > 0)
                 {
                     error = "";
                 }
@@ -179,7 +181,7 @@ namespace ForumClient.Api
         public async Task<bool> SignOut()
         {
             bool result = true;
-            using (var resp = await c.GetAsync(ForumUrl + "forum/logging.php?action=logout&formhash=420b6ba6"))
+            using (var resp = await client.GetAsync(config.logout_url))
             {
                 await resp.Content.ReadAsByteArrayAsync();
             }
@@ -189,40 +191,36 @@ namespace ForumClient.Api
         public async Task<List<Forum>> GetForumList()
         {
             var forums = new List<Forum>();
-            using (var resp = await c.GetAsync(ForumUrl + "forum/index.php"))
+            using (var resp = await client.GetAsync(config.forumlist_url))
             {
                 var data = await resp.Content.ReadAsByteArrayAsync();
                 var doc = new HtmlDocument();
                 doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
-                var html = GetElementByType(doc.DocumentNode, "html");
-                var body = GetElementByType(html, "body");
-                var wrap = GetElementById(body, "div", "wrap");
-                var main = GetElementByClass(wrap, "div", "main");
-                var content = GetElementByClass(main, "div", "content");
-                foreach (var mainbox in FindElementByClass(content, "div", "mainbox list"))
+
+                var forum_root = GetElement(doc.DocumentNode, config.forum_root, 0);
+                if (forum_root != null)
                 {
-                    var table = GetElementByType(mainbox, "table");
-                    if (table == null) continue;
-                    foreach (var tbody in FindElementByType(table, "tbody"))
+                    foreach (var child in forum_root.ChildNodes)
                     {
-                        var tr = GetElementByType(tbody, "tr");
-                        if (tr == null) continue;
-                        var th = GetElementByType(tr, "th");
-                        if (th == null) continue;
-                        var div = GetElementByType(th, "div");
-                        if (div == null) continue;
-                        var h2 = GetElementByType(div, "h2");
-                        if (h2 == null) continue;
-                        var a = GetElementByType(h2, "a");
-                        if (a == null) continue;
-                        var href = GetAttributeValue(a, "href");
-                        if (href == null) continue;
-                        var p = GetElementByType(div, "p");
-                        if (p == null) continue;
-                        var name = a.InnerText;
-                        var id = href.Substring(href.IndexOf('=') + 1);
-                        if (id.IndexOf('&') > 0) id = id.Substring(0, id.IndexOf('&'));
-                        forums.Add(new Forum() { Id = id, Name = name, Desc = p.InnerText });
+                        var forum_start = GetElement(child, config.forum_start);
+                        if (forum_start == null) continue;
+
+                        var forum = new Forum();
+                        HtmlNode node;
+
+                        node = GetElement(forum_start, config.forum_id);
+                        if (node == null) continue;
+                        forum.Id = node.InnerText;
+
+                        node = GetElement(forum_start, config.forum_title);
+                        if (node == null) continue;
+                        forum.Name = node.InnerText;
+
+                        node = GetElement(forum_start, config.forum_desc);
+                        if (node == null) continue;
+                        forum.Desc = node.InnerText;
+
+                        forums.Add(forum);
                     }
                 }
             }
@@ -232,77 +230,65 @@ namespace ForumClient.Api
         public async Task<List<Thread>> GetForum(string fid, int page)
         {
             var threads = new List<Thread>();
-
-            using (var resp = await c.GetAsync(ForumUrl + "forum/forumdisplay.php?fid=" + fid + "&page=" + page.ToString()))
+            var url = string.Format(config.threadlist_url, fid, page);
+            using (var resp = await client.GetAsync(url))
             {
                 var data = await resp.Content.ReadAsByteArrayAsync();
                 var doc = new HtmlDocument();
                 doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
-                var html = GetElementByType(doc.DocumentNode, "html");
-                var body = GetElementByType(html, "body");
-                var wrap = GetElementById(body, "div", "wrap");
-                var main = GetElementByClass(wrap, "div", "main");
-                var content = GetElementByClass(main, "div", "content");
-                var threadlist = GetElementById(content, "div", "threadlist");
-                var table = GetElementByType(threadlist, "table");
-                foreach (var tbody in FindElementByType(table, "tbody"))
+
+                var thread_root = GetElement(doc.DocumentNode, config.thread_root, 0);
+                if (thread_root != null)
                 {
-                    var tr = GetElementByType(tbody, "tr");
-                    if (tr == null) continue;
-
-                    var th = GetElementByType(tr, "th");
-                    if (th == null) continue;
-
-                    if (GetAttributeValue(th, "class") == "subject")
+                    foreach (var child in thread_root.ChildNodes)
                     {
-                        foreach (var t in threads)
+                        var thread_start = GetElement(child, config.thread_start);
+                        if (thread_start == null) continue;
+
+                        if (GetElement(child, config.thread_default) != null)
                         {
-                            t.OnTop = true;
+                            for (int i = 0; i < threads.Count; i++)
+                            {
+                                threads[i].OnTop = true;
+                            }
+                            continue;
                         }
-                        continue;
+
+                        var thread = new Thread();
+                        HtmlNode node;
+
+                        node = GetElement(child, config.thread_id);
+                        if (node == null) continue;
+                        thread.Id = node.InnerText;
+
+                        node = GetElement(child, config.thread_title);
+                        if (node == null) continue;
+                        thread.Title = node.InnerText;
+
+                        node = GetElement(child, config.thread_post_auth_name);
+                        if (node == null) continue;
+                        thread.Author.Name = node.InnerText;
+
+                        node = GetElement(child, config.thread_post_auth_id);
+                        if (node == null) continue;
+                        thread.Author.Id = node.InnerText;
+
+                        node = GetElement(child, config.thread_post_time);
+                        if (node == null) continue;
+                        thread.PostTime = node.InnerText;
+
+                        node = GetElement(child, config.thread_last_auth_name);
+                        if (node != null)
+                            thread.Author.Name = node.InnerText;
+
+                        node = GetElement(child, config.thread_last_auth_id);
+                        if (node != null)
+                            thread.Author.Id = node.InnerText;
+
+                        node = GetElement(child, config.thread_last_time);
+                        if (node != null)
+                            thread.PostTime = node.InnerText;
                     }
-
-                    var max_page = 1;
-                    var pages = GetElementByClass(th, "span", "threadpages");
-                    if (pages != null)
-                    {
-                        foreach (var page_item in FindElementByType(pages, "a"))
-                        {
-                            var href = GetAttributeValue(page_item, "href");
-                            var ndx = href.Substring(href.LastIndexOf("page=", StringComparison.CurrentCulture) + 5);
-                            if (ndx.IndexOf('&') > 0) ndx = ndx.Substring(0, ndx.IndexOf('&'));
-                            int num = int.Parse(ndx);
-                            if (num > max_page) max_page = num;
-                        }
-                    }
-
-                    var subject_span = GetElementByType(th, "span");
-                    if (subject_span == null) continue;
-                    var subject_a = GetElementByType(subject_span, "a");
-                    var subject_href = GetAttributeValue(subject_a, "href");
-                    var id = subject_href.Substring(subject_href.IndexOf('=') + 1);
-                    if (id.IndexOf('&') > 0) id = id.Substring(0, id.IndexOf('&'));
-
-                    var author_td = GetElementByClass(tr, "td", "author");
-                    var author_cite = GetElementByType(author_td, "cite");
-                    var author_a = GetElementByType(author_cite, "a");
-                    var author = PaseAuthor(author_a);
-                    var author_em = GetElementByType(author_td, "em");
-
-                    Author l_author = null;
-                    String l_posttime = "";
-                    var last_td = GetElementByClass(tr, "td", "lastpost");
-                    if (last_td != null)
-                    {
-                        var last_cite = GetElementByType(last_td, "cite");
-                        var last_a = GetElementByType(last_cite, "a");
-                        l_author = PaseAuthor(last_a);
-                        var last_em = GetElementByType(last_td, "em");
-                        var last_em_a = GetElementByType(last_em, "a");
-                        l_posttime = last_em_a.InnerText;
-                    }
-
-                    threads.Add(new Thread() { OnTop = false, Id = id, Title = subject_a.InnerText, Author = author, PostTime = author_em.InnerText, Last_Author = l_author, Last_PostTime = l_posttime, PageNum = max_page });
                 }
             }
             return threads;
@@ -311,173 +297,47 @@ namespace ForumClient.Api
         public async Task<List<Post>> GetThread(string tid, int page)
         {
             var retval = new List<Post>();
-            var real_url = ForumUrl + "forum/viewthread.php?tid=" + tid + "&extra=page%3D1&page=" + page.ToString();
-            using (var resp = await c.GetAsync(real_url))
+            var url = string.Format(config.postlist_url, tid, page);
+            using (var resp = await client.GetAsync(url))
             {
                 var data = await resp.Content.ReadAsByteArrayAsync();
                 var doc = new HtmlDocument();
                 doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
-                var html = GetElementByType(doc.DocumentNode, "html");
-                var body = GetElementByType(html, "body");
-                var wrap = GetElementById(body, "div", "wrap");
-                var postlist = GetElementById(wrap, "div", "postlist");
-                foreach (var div in FindElementByType(postlist, "div"))
+
+                var post_root = GetElement(doc.DocumentNode, config.post_root, 0);
+                foreach (var child in post_root.ChildNodes)
                 {
-                    var table = GetElementByType(div, "table");
-                    if (table == null) continue;
-                    var tr = GetElementByType(table, "tr");
-                    if (tr == null) continue;
+                    var post_start = GetElement(child, config.post_start);
+                    if (post_start == null) continue;
 
-                    var postauthor = GetElementByClass(tr, "td", "postauthor");
-                    var postinfo = GetElementByClass(postauthor, "div", "postinfo");
-                    var postinfo_a = GetElementByType(postinfo, "a");
-                    var author = PaseAuthor(postinfo_a);
+                    var post = new Post();
+                    HtmlNode node;
 
-                    var postcontent = GetElementByClass(tr, "td", "postcontent");
+                    node = GetElement(post_start, config.post_id);
+                    if (node == null) continue;
+                    post.Id = node.InnerText;
 
-                    var postinfo_1 = GetElementByClass(postcontent, "div", "postinfo");
-                    var postinfo_x = GetElementByClass(postinfo_1, "div", "posterinfo");
-                    var postinfo_i = GetElementByClass(postinfo_x, "div", "authorinfo");
-                    var postinfo_em = GetElementByType(postinfo_i, "em");
-                    var posttime = postinfo_em.InnerText;
-                    posttime = posttime.Substring(posttime.IndexOf(' ') + 1);
+                    node = GetElement(post_start, config.post_auth_name);
+                    if (node == null) continue;
+                    post.Id = node.InnerText;
 
-                    var defaultpost = GetElementByClass(postcontent, "div", "defaultpost");
-                    var postmessage = GetElementByClass(defaultpost, "div", "postmessage firstpost");
-                    if (postmessage == null)
+                    node = GetElement(post_start, config.post_auth_id);
+                    if (node == null) continue;
+                    post.Id = node.InnerText;
+
+                    node = GetElement(post_start, config.post_time);
+                    if (node == null) continue;
+                    post.Id = node.InnerText;
+
+                    node = GetElement(post_start, config.post_content_1);
+                    if (node == null)
                     {
-                        postmessage = GetElementByClass(defaultpost, "div", "postmessage ");
+                        node = GetElement(post_start, config.post_content_2);
+                        if (node == null) continue;
                     }
+                    ParseHtmlNode(post.Nodes, node);
 
-                    string content = "";
-                    var nodes = new List<PostNode>();
-
-                    var postmessage_div = GetElementByClass(postmessage, "div", "t_msgfontfix");
-                    if (postmessage_div != null)
-                    {
-                        var postmessage_table = GetElementByType(postmessage_div, "table");
-                        if (postmessage_table == null)
-                        {
-                            postmessage_table = null;
-                        }
-                        var postmessage_tr = GetElementByType(postmessage_table, "tr");
-                        var postmessage_td = GetElementByType(postmessage_tr, "td");
-
-                        ParseHtmlNode(nodes, postmessage_td);
-                        content = postmessage_td.InnerText;
-                    }
-                    else
-                    {
-                        var postmessage_lock = GetElementByClass(postmessage, "div", "locked");
-                        if (postmessage_lock == null)
-                        {
-                            postmessage_lock = null;
-                        }
-                        content = postmessage_lock.InnerText;
-                        nodes.Add(new PostNode()
-                        {
-                            NodeType = "text",
-                            Text = content
-                        });
-                    }
-
-                    retval.Add(new Post() { Author = author, Content = content, PostTime = posttime, Nodes = nodes });
-                }
-            }
-            return retval;
-        }
-
-        HtmlNode GetElementByType(HtmlNode basenode, string type)
-        {
-            foreach (var node in basenode.ChildNodes)
-            {
-                if (node.NodeType == HtmlNodeType.Element)
-                {
-                    if (node.Name == type)
-                    {
-                        return node;
-                    }
-                }
-            }
-            return null;
-        }
-
-        HtmlNode GetElementById(HtmlNode basenode, string name, string id)
-        {
-            foreach (var node in basenode.ChildNodes)
-            {
-                if (node.NodeType == HtmlNodeType.Element)
-                {
-                    if (node.Name == name)
-                    {
-                        foreach (var attr in node.ChildAttributes("id"))
-                        {
-                            if (attr.Name == "id" && attr.Value == id)
-                            {
-                                return node;
-                            }
-                        }
-                    }
-                }
-            }
-            return null;
-        }
-
-        HtmlNode GetElementByClass(HtmlNode basenode, string name, string cname)
-        {
-            foreach (var node in basenode.ChildNodes)
-            {
-                if (node.NodeType == HtmlNodeType.Element)
-                {
-                    if (node.Name == name)
-                    {
-                        foreach (var attr in node.ChildAttributes("class"))
-                        {
-                            if (attr.Value == cname)
-                            {
-                                return node;
-                            }
-                        }
-                    }
-                }
-            }
-            return null;
-        }
-
-        List<HtmlNode> FindElementByType(HtmlNode basenode, string name)
-        {
-            var retval = new List<HtmlNode>();
-            foreach (var node in basenode.ChildNodes)
-            {
-                if (node.NodeType == HtmlNodeType.Element)
-                {
-                    if (node.Name == name)
-                    {
-                        retval.Add(node);
-                    }
-                }
-            }
-            return retval;
-        }
-
-        List<HtmlNode> FindElementByClass(HtmlNode basenode, string name, string cname)
-        {
-            var retval = new List<HtmlNode>();
-            foreach (var node in basenode.ChildNodes)
-            {
-                if (node.NodeType == HtmlNodeType.Element)
-                {
-                    if (node.Name == name)
-                    {
-                        foreach (var attr in node.ChildAttributes("class"))
-                        {
-                            if (attr.Name == "class" && attr.Value == cname)
-                            {
-                                retval.Add(node);
-                                break;
-                            }
-                        }
-                    }
+                    retval.Add(post);
                 }
             }
             return retval;
@@ -491,6 +351,37 @@ namespace ForumClient.Api
                     return attr.Value;
             }
             return "";
+        }
+
+
+        bool CheckElement(HtmlNode node, ConfigItem item)
+        {
+            if (node.NodeType != HtmlNodeType.Element) return false;
+            if (!string.IsNullOrEmpty(item._type) && item._type != node.Name) return false;
+            if (!string.IsNullOrEmpty(item._id) && item._type != GetAttributeValue(node, "id")) return false;
+            if (!string.IsNullOrEmpty(item._class) && item._type != GetAttributeValue(node, "class")) return false;
+            return true;
+        }
+
+        HtmlNode GetElement(HtmlNode root, List<ConfigItem> list)
+        {
+            if (!CheckElement(root, list[0])) return null;
+            return GetElement(root, list, 1);
+        }
+
+        HtmlNode GetElement(HtmlNode root, List<ConfigItem> list, int index)
+        {
+            foreach (var node in root.ChildNodes)
+            {
+                if (!CheckElement(node, list[index])) continue;
+
+                if (index < list.Count - 1)
+                {
+                    return GetElement(node, list, index + 1);
+                }
+                return node;
+            }
+            return null;
         }
 
         void PrintNode(int level, HtmlNode basenode)
@@ -515,25 +406,6 @@ namespace ForumClient.Api
             {
                 PrintNode(0, node);
             }
-        }
-
-        Author PaseAuthor(HtmlNode node)
-        {
-            var retval = new Author();
-            retval.Name = "UNKNOWN";
-            retval.Id = "0";
-            if (node != null)
-            {
-                var href = GetAttributeValue(node, "href");
-                if (href != null)
-                {
-                    var id = href.Substring(href.IndexOf('=') + 1);
-                    if (id.IndexOf('&') > 0) id = id.Substring(0, id.IndexOf('&'));
-                    retval.Id = id;
-                    retval.Name = node.InnerText;
-                }
-            }
-            return retval;
         }
 
         string MD5Password(string password)

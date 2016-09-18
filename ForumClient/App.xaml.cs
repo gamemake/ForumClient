@@ -20,7 +20,7 @@ namespace ForumClient
             }
         }
 
-        public Api.Client client = new Api.Client("http://www.hi-pda.com/");
+        public Api.Client client = new Api.Client("", null);
 
         protected override void OnStart()
         {

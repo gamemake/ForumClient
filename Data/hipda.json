@@ -1,13 +1,14 @@
 
 {
-	"base_url" : "",
-	"login_url" : "",
-	"logout_url" : "",
-	"forum_url" : "",
-	"thread_url" : "",
-	"post_url" : "",
-	"cookie_check" : "",
-	"login_messge" : "",
+	"html_encoder" : "gbk",
+	"base_url" : "http://www.hi-pda.com",
+	"login_url" : "http://www.hi-pda.com/forum/logging.php?action=login&loginsubmit=yes&inajax=1",
+	"logout_url" : "http://www.hi-pda.com/forum/logging.php?action=logout&formhash=420b6ba6",
+	"forumlist_url" : "http://www.hi-pda.com/forum/index.php",
+	"threadlist_url" : "http://www.hi-pda.com/forum/forumdisplay.php?fid={0}&page={1}",
+	"postlist_url" : "http://www.hi-pda.com/forum/viewthread.php?tid={0}&extra=page%3D1&page={1}",
+	"cookie_check" : "cdb_auth",
+	"login_messge" : "CDATA[.*]]",
 	"forum_list" : {
 		"forum_root" : [
 			{ "type" : "html", "id": "",     "class": "" },

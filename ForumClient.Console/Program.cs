@@ -14,7 +14,7 @@ namespace ForumClient
 
         private static async void DoTest()
         {
-            var client = new Api.Client("http://www.hi-pda.com/");
+            var client = new Api.Client("", null); 
 
             await client.SignIn("gamemake", "123456");
 
