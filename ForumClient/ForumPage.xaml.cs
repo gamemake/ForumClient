@@ -85,6 +85,7 @@ namespace ForumClient
         {
             if (IsLoading) return;
             IsLoading = true;
+            threadList.BeginRefresh();
 
             var c = (Application.Current as App).client;
             if (page < 1) page = 1;
@@ -118,6 +119,7 @@ namespace ForumClient
                 Console.WriteLine("UpdateThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
             }
 
+            threadList.EndRefresh();
             IsLoading = false;
         }
 

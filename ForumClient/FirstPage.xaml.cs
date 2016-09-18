@@ -38,6 +38,7 @@ namespace ForumClient
         public async void Fetch()
         {
             var c = (Application.Current as App).client;
+            forumList.BeginRefresh();
 
             var start = DateTime.UtcNow;
             var list = await c.GetForumList();
@@ -52,6 +53,8 @@ namespace ForumClient
             start = DateTime.UtcNow;
             forumList.ItemsSource = forumListData;
             Console.WriteLine("UpdateForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+
+            forumList.EndRefresh();
         }
 
         public async void PullToRefresh()

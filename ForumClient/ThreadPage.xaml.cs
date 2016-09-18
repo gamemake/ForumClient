@@ -23,7 +23,6 @@ namespace ForumClient
 
             start = DateTime.UtcNow;
             bool first = true;
-            content.BatchBegin();
             foreach (var item in list)
             {
                 if (!first)
@@ -35,23 +34,6 @@ namespace ForumClient
                     });
                 }
                 first = false;
-
-                var refen = new Label() { Text = " 引用 ", TextColor = Color.Blue, FontSize = 10, HorizontalOptions = LayoutOptions.End };
-                refen.GestureRecognizers.Add(new TapGestureRecognizer() { Command = new Command(() => { PostReference(tid, "aa"); }) });
-                var reply = new Label() { Text = " 回复 ", TextColor = Color.Blue, FontSize = 10, HorizontalOptions = LayoutOptions.End };
-                reply.GestureRecognizers.Add(new TapGestureRecognizer() { Command = new Command(() => { PostReply(tid, "aa"); }) });
-
-                content.Children.Add(new StackLayout()
-                {
-                    Orientation = StackOrientation.Horizontal,
-                    Spacing = 0,
-                    Children =
-                    {
-                        new Label() { Text = item.Author.Name, TextColor=Color.Gray, FontSize = 10, HorizontalOptions=LayoutOptions.StartAndExpand },
-                        new Label() { Text = item.PostTime,   TextColor=Color.Gray, FontSize = 10, HorizontalOptions=LayoutOptions.End },
-                        refen, reply
-                    }
-                });
 
                 foreach (var node in item.Nodes)
                 {
@@ -82,8 +64,24 @@ namespace ForumClient
                         });
                     }
                 }
+
+                var refen = new Label() { Text = " 引用 ", TextColor = Color.Blue, FontSize = 10, HorizontalOptions = LayoutOptions.End };
+                refen.GestureRecognizers.Add(new TapGestureRecognizer() { Command = new Command(() => { PostReference(tid, "aa"); }) });
+                var reply = new Label() { Text = " 回复 ", TextColor = Color.Blue, FontSize = 10, HorizontalOptions = LayoutOptions.End };
+                reply.GestureRecognizers.Add(new TapGestureRecognizer() { Command = new Command(() => { PostReply(tid, "aa"); }) });
+                content.Children.Add(new StackLayout()
+                {
+                    Orientation = StackOrientation.Horizontal,
+                    Spacing = 0,
+                    Children =
+                    {
+                        new Label() { Text = item.Author.Name, TextColor=Color.Gray, FontSize = 10, HorizontalOptions=LayoutOptions.StartAndExpand },
+                        new Label() { Text = item.PostTime,   TextColor=Color.Gray, FontSize = 10, HorizontalOptions=LayoutOptions.End },
+                        refen, reply
+                    }
+                });
             }
-            content.BatchCommit();
+
             Console.WriteLine("UpdatePostList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
         }
 
