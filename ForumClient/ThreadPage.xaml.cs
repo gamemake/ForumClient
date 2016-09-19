@@ -87,14 +87,27 @@ namespace ForumClient
             content.Children.Add(image);
             System.Threading.Tasks.Task.Run(async () =>
             {
-                System.Uri uri;
-                System.Uri.TryCreate(url, UriKind.Absolute, out uri);
-                var result = System.Threading.Tasks.Task<ImageSource>.Factory.StartNew(() => ImageSource.FromUri(uri));
-                var source = await result;
-                Device.BeginInvokeOnMainThread(() =>
+                var client = (Application.Current as App).client;
+                var data = await client.GetRawData(url, true);
+                if(data!=null)
                 {
-                    image.Source = source;
-                });
+                    var source = ImageSource.FromStream(() => new System.IO.MemoryStream(data));
+                    Device.BeginInvokeOnMainThread(() =>
+                    {
+                        image.Source = source;
+                    });
+                }
+                /*
+                                System.Uri uri;
+                                System.Uri.TryCreate(url, UriKind.Absolute, out uri);
+
+                                var result = System.Threading.Tasks.Task<ImageSource>.Factory.StartNew(() => ImageSource.FromUri(uri));
+                                var source = await result;
+                                Device.BeginInvokeOnMainThread(() =>
+                                {
+                                    image.Source = source;
+                                });
+                */
             });
             sleep_time = (int)((System.DateTime.UtcNow - start).Ticks / System.TimeSpan.TicksPerMillisecond);
             sem.Release(1);

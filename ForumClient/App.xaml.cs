@@ -11,13 +11,14 @@ namespace ForumClient
 #if __IOS__
             string config_file = System.IO.Path.Combine(Foundation.NSBundle.MainBundle.BundlePath, "json/hipda.json");
             config.LoadFromFile(config_file);
-            client = new ForumClient.Api.Client("hipda", config);
 #elif __ANDROID__
-            using (var stream = Android.App.Application.Context.ApplicationContext.Assets.Open("json/hipda.json"))
+            using (var stream = Android.App.Application.Context.ApplicationContext.Assets.Open("json/1024.json"))
             {
                 config.LoadFromStream(new System.IO.StreamReader(stream));
             }
 #endif
+
+            client = new ForumClient.Api.Client("1024", config);
 
             InitializeComponent();
 

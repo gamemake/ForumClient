@@ -35,8 +35,13 @@ namespace ForumClient
             }
         }
 
+        bool IsLoading = false;
+
         public async void Fetch()
         {
+            if (IsLoading) return;
+            IsLoading = true;
+
             var c = (Application.Current as App).client;
             forumList.BeginRefresh();
 
@@ -62,10 +67,14 @@ namespace ForumClient
             }
 
             forumList.EndRefresh();
+            IsLoading = false;
         }
 
         public async void PullToRefresh()
         {
+            if (IsLoading) return;
+            IsLoading = true;
+
             var c = (Application.Current as App).client;
 
             var start = DateTime.UtcNow;
@@ -90,6 +99,7 @@ namespace ForumClient
             }
 
             forumList.EndRefresh();
+            IsLoading = false;
         }
     }
 }

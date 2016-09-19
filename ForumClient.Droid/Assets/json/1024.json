@@ -98,35 +98,30 @@
 			{ "name" : "table" }
 		],
 		"post_id" : [
-			{ "name" : "tr", "class": "tr1 do_not_catch" },
-			{ "name" : "th", "height": "100%" },
-			{ "name" : "table" },
 			{ "name" : "tr" },
-			{ "name" : "td" },
+			{ "name" : "th", "height": "100%" },
+			{ },
 			{ "name" : "div", "class": "tiptop" },
 			{ "name" : "a", "inner_html": "引用" }
 		],
 		"post_auth_name" : [
-			{ "name" : "tr", "class": "tr1 do_not_catch" },
-			{ "name" : "th", "width": "20%" },
-			{ "name" : "font" },
+			{ "name" : "tr" },
+			{ "name" : "th", "class": "r_two" },
+			{ },
 			{ "name" : "b" }
 		],
 		"post_auth_id" : [
 		],
 		"post_time" : [
-			{ "name" : "tr", "class": "tr1" },
+			{ "name" : "tr" },
 			{ "name" : "th" },
-			{ "name" : "div" }
+			{ "name" : "div", "class": "tipad" }
 		],
 		"post_time_left" : "Posted:",
 		"post_time_right" : "|",
 		"content_1" : [
-			{ "name" : "tr", "class": "tr1 do_not_catch" },
-			{ "name" : "th", "height": "100%" },
-			{ "name" : "table" },
 			{ "name" : "tr" },
-			{ "name" : "td" }
+			{ "name" : "th", "height": "100%" }
 		],
 		"content_2" : [
 			{ "name" : "td", "class": "postcontent" },

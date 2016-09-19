@@ -81,6 +81,11 @@ namespace ForumClient.Api
         private System.Net.CookieContainer cookies;
         private HttpClient client;
 
+        public HttpClient GetHttpClient()
+        {
+            return client;
+        }
+
         public Client(string name, Config config)
         {
             this.config = config;
@@ -96,7 +101,7 @@ namespace ForumClient.Api
             {
                 handler.AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate;
             }
-            // handler.Proxy = new System.Net.WebProxy("http://localhost:1080/", true);
+            handler.Proxy = new System.Net.WebProxy("http://192.168.10.148:1080/", true);
             handler.CookieContainer = this.cookies;
             handler.UseCookies = true;
             handler.AllowAutoRedirect = true;
@@ -364,7 +369,7 @@ namespace ForumClient.Api
             try
             {
                 var url = string.Format(config.postlist_url, tid, page);
-                var doc = await GetData(url, true);
+                var doc = await GetHtmlDocument(url, true);
                 if (doc == null)
                 {
                     return null;
@@ -377,16 +382,21 @@ namespace ForumClient.Api
                         var post_start = GetElement(child, config.post_start);
                         if (post_start == null) continue;
 
+                        Console.WriteLine("==================");
+                        PrintNode(0, post_start);
+
                         var post = new Post();
                         HtmlNode node;
 
                         node = GetElement(post_start, config.post_id, 0);
-                        if (node == null) continue;
+                        if (node == null)
+                            continue;
                         post.Id = GetAttributeValue(node, "href");
                         post.Id = GetUrlString(post.Id, "pid=", "&");
 
                         node = GetElement(post_start, config.post_auth_name, 0);
-                        if (node == null) continue;
+                        if (node == null)
+                            continue;
                         post.Author.Name = node.InnerText;
 
                         if(config.post_auth_id.Count>0)
@@ -401,7 +411,8 @@ namespace ForumClient.Api
                         }
 
                         node = GetElement(post_start, config.post_time, 0);
-                        if (node == null) continue;
+                        if (node == null)
+                            continue;
                         post.PostTime = node.InnerText;
                         if (config.post_time_left.Length > 0 && post.PostTime.LastIndexOf(config.post_time_left) >= 0)
                         {
@@ -474,10 +485,22 @@ namespace ForumClient.Api
         HtmlNode GetElement(HtmlNode root, List<ConfigItem> list, int index)
         {
             if (index == list.Count) return root;
+
             foreach (var node in root.ChildNodes)
             {
-                if (!CheckElement(node, list[index])) continue;
-                var retval = GetElement(node, list, index + 1);
+                HtmlNode retval;
+                if (list[index].Count > 0)
+                {
+                    if (!CheckElement(node, list[index])) continue;
+                }
+                else
+                {
+                    retval = GetElement(root, list, index + 1);
+                    if (retval != null) return retval;
+                    retval = GetElement(node, list, index);
+                    if (retval != null) return retval;
+                }
+                retval = GetElement(node, list, index + 1);
                 if (retval != null) return retval;
             }
             return null;
@@ -649,7 +672,26 @@ namespace ForumClient.Api
             }
         }
 
-        public async System.Threading.Tasks.Task<HtmlDocument> GetData(string url, bool redirect)
+        public async System.Threading.Tasks.Task<byte[]> GetRawData(string url, bool redirect)
+        {
+            try
+            {
+                do
+                {
+                    using (var resp = await client.GetAsync(url))
+                    {
+                        var data = await resp.Content.ReadAsByteArrayAsync();
+                        return data;
+                    }
+                } while (redirect);
+            }
+            catch (Exception)
+            {
+            }
+            return null;
+        }
+
+        public async System.Threading.Tasks.Task<HtmlDocument> GetHtmlDocument(string url, bool redirect)
         {
             HtmlDocument doc = null;
             try
@@ -697,7 +739,7 @@ namespace ForumClient.Api
                     }
                 } while (redirect);
             }
-            catch(Exception)
+            catch (Exception)
             {
                 doc = null;
             }
