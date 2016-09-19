@@ -96,9 +96,13 @@ namespace ForumClient.Api
             {
                 handler.AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate;
             }
+            handler.Proxy = new System.Net.WebProxy("http://192.168.3.186:1080/", true);
             handler.CookieContainer = this.cookies;
             handler.UseCookies = true;
             client = new HttpClient(handler);
+
+            client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36");
+
             client.BaseAddress = new Uri(this.config.base_url);
         }
 
@@ -215,18 +219,22 @@ namespace ForumClient.Api
                 {
                     var data = await resp.Content.ReadAsByteArrayAsync();
                     var doc = new HtmlDocument();
-                    doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
+                    doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding(config.text_encoder));
 
                     var forum_root = GetElement(doc.DocumentNode, config.forum_root, 0);
                     if (forum_root != null)
                     {
                         foreach (var child1 in forum_root.ChildNodes)
                         {
+                            if (child1.NodeType != HtmlNodeType.Element) continue;
+
                             var forum_category = GetElement(child1, config.forum_category);
                             if (forum_category == null) continue;
 
                             foreach (var child in forum_category.ChildNodes)
                             {
+                                if (child.NodeType != HtmlNodeType.Element) continue;
+
                                 var forum_start = GetElement(child, config.forum_start);
                                 if (forum_start == null) continue;
 
@@ -269,8 +277,11 @@ namespace ForumClient.Api
                 using (var resp = await client.GetAsync(url))
                 {
                     var data = await resp.Content.ReadAsByteArrayAsync();
+
                     var doc = new HtmlDocument();
-                    doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
+                    doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding(config.text_encoder));
+
+                    PrintHtml(doc);
 
                     var thread_root = GetElement(doc.DocumentNode, config.thread_root, 0);
                     if (thread_root != null)
@@ -298,7 +309,7 @@ namespace ForumClient.Api
 
                             node = GetElement(thread_start, config.thread_title, 0);
                             if (node == null) continue;
-                            thread.Title = node.InnerText;
+                            thread.Title = GetHtmlNodeText(node);
 
                             node = GetElement(thread_start, config.thread_post_auth_name, 0);
                             if (node == null) continue;
@@ -348,7 +359,7 @@ namespace ForumClient.Api
                 {
                     var data = await resp.Content.ReadAsByteArrayAsync();
                     var doc = new HtmlDocument();
-                    doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
+                    doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding(config.text_encoder));
 
                     var post_root = GetElement(doc.DocumentNode, config.post_root, 0);
                     foreach (var child in post_root.ChildNodes)
@@ -411,9 +422,17 @@ namespace ForumClient.Api
         bool CheckElement(HtmlNode node, ConfigItem item)
         {
             if (node.NodeType != HtmlNodeType.Element) return false;
-            if (!string.IsNullOrEmpty(item._type) && item._type != node.Name) return false;
-            if (!string.IsNullOrEmpty(item._id) && item._id != GetAttributeValue(node, "id")) return false;
-            if (!string.IsNullOrEmpty(item._class) && item._class != GetAttributeValue(node, "class")) return false;
+            foreach (var pair in item)
+            {
+                if (pair.Key == "name")
+                {
+                    if (pair.Value != node.Name) return false;
+                }
+                else
+                {
+                    if(pair.Value != GetAttributeValue(node, pair.Key) && (pair.Value != "*" || GetAttributeValue(node, pair.Key) == "")) return false;
+                }
+            }
             return true;
         }
 
@@ -451,8 +470,8 @@ namespace ForumClient.Api
             {
                 for (int i = 0; i < level; i++)
                     Console.Write("      ");
-                var text = basenode.InnerHtml.Replace("\n", "");
-                if (text.Length > 20) text = text.Substring(0, 20);
+                var text = basenode.InnerHtml.Replace('\n', ' ').Replace('\r', ' ');
+                if (text.Length > 40) text = text.Substring(0, 40);
                 Console.WriteLine("{0}-{1}-{2}-{3}", basenode.Name, GetAttributeValue(basenode, "id"), GetAttributeValue(basenode, "class"), text);
                 foreach (var node in basenode.ChildNodes)
                 {
@@ -479,6 +498,30 @@ namespace ForumClient.Api
             }
             return sb.ToString();
         }
+
+        void GetHtmlNodeText(System.Text.StringBuilder builder, HtmlNode basenode)
+        {
+            if (basenode.NodeType == HtmlNodeType.Text)
+            {
+                var text = basenode.OuterHtml;
+                text = text.Replace("\n", "");
+                text = text.Replace("\r", "");
+                text = text.Trim();
+                if (text.Length > 0)
+                {
+                    builder.Append(text);
+                }
+            }
+        }
+
+        string GetHtmlNodeText(HtmlNode basenode)
+        {
+            var builder = new System.Text.StringBuilder();
+            return builder.ToString();
+        }
+
+
+
 
         void ParseHtmlNode(System.Text.StringBuilder builder, HtmlNode basenode)
         {

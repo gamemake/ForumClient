@@ -1,0 +1,148 @@
+
+{
+	"text_encoder" : "gbk",
+	"base_url" : "http://www.t66y.com",
+	"login_url" : "http://www.t66y.com/logging.php?action=login&loginsubmit=yes&inajax=1",
+	"logout_url" : "http://www.t66y.com/logging.php?action=logout&formhash=420b6ba6",
+	"forumlist_url" : "http://www.t66y.com/index.php",
+	"threadlist_url" : "http://www.t66y.com/thread0806.php?fid={0}&search=&page={1}",
+	"postlist_url" : "http://www.t66y.com/viewthread.php?tid={0}&extra=page%3D1&page={1}",
+	"cookie_check" : "cdb_auth",
+	"login_messge" : "CDATA[.*]]",
+	"forum_list" : {
+		"forum_root" : [
+			{ "name" : "html" },
+			{ "name" : "body" },
+			{ "name" : "div", "id": "main" }
+		],
+		"forum_category" : [
+			{ "name" : "div" },
+			{ "name" : "table" },
+			{ "name" : "tbody", "id": "*" }
+		],
+		"forum_start" : [
+			{ "name" : "tr", "class": "*" },
+			{ "name" : "th" }
+		],
+		"forum_id" : [
+			{ "name" : "h2" },
+			{ "name" : "a" }
+		],
+		"forum_title" : [
+			{ "name" : "h2" },
+			{ "name" : "a" }
+		],
+		"forum_desc" : [
+			{ "name" : "span" }
+		]
+	},
+	"thread_list" : {
+		"thread_root" : [
+			{ "name" : "html" },
+			{ "name" : "body" },
+			{ "name" : "div", "id": "main" },
+			{ "name" : "div", "style": "margin:3px auto" },
+			{ "name" : "table" },
+			{ "name" : "tbody", "style": "table-layout:fixed;" }
+		],
+		"thread_start" : [
+			{ "name" : "tr", "align": "center" }
+		],
+		"thread_default" : [
+			{ "name" : "tr" },
+			{ "name" : "th", "class": "subject" }
+		],
+		"thread_id" : [
+			{ "name" : "td", "style": "text-align:left;padding-left:8px" },
+			{ "name" : "h3" },
+			{ "name" : "a" }
+		],
+		"thread_title" : [
+			{ "name" : "td", "style": "text-align:left;padding-left:8px" },
+			{ "name" : "h3" },
+			{ "name" : "a" }
+		],
+		"post_auth_name" : [
+			{ "name" : "td", "class": "author" },
+			{ "name" : "cite" },
+			{ "name" : "a" }
+		],
+		"post_auth_id" : [
+			{ "name" : "td", "class": "author" },
+			{ "name" : "cite" },
+			{ "name" : "a" }
+		],
+		"post_time" : [
+			{ "name" : "td", "class": "author" },
+			{ "name" : "em" }
+		],
+		"last_auth_name" : [
+			{ "name" : "td", "class": "lastpost" },
+			{ "name" : "cite" },
+			{ "name" : "a" }
+		],
+		"last_auth_id" : [
+			{ "name" : "td", "class": "lastpost" },
+			{ "name" : "cite" },
+			{ "name" : "a" }
+		],
+		"last_time" : [
+			{ "name" : "td", "class": "lastpost" },
+			{ "name" : "em" }
+		]
+	},
+	"post_list" : {
+		"post_root" : [
+			{ "name" : "html" },
+			{ "name" : "body" },
+			{ "name" : "div", "id": "wrap" },
+			{ "name" : "div", "id": "postlist" }
+		],
+		"post_start" : [
+			{ "name" : "div" },
+			{ "name" : "table" },
+			{ "name" : "tr" }
+		],
+		"post_id" : [
+			{ "name" : "td", "class": "postcontent" },
+			{ "name" : "div", "class": "postinfo" },
+			{ "name" : "strong" },
+			{ "name" : "a" }
+		],
+		"post_auth_name" : [
+			{ "name" : "td", "class": "postauthor" },
+			{ "name" : "div", "class": "postinfo" },
+			{ "name" : "a" }
+		],
+		"post_auth_id" : [
+			{ "name" : "td", "class": "postauthor" },
+			{ "name" : "div", "class": "postinfo" },
+			{ "name" : "a" }
+		],
+		"post_time" : [
+			{ "name" : "td", "class": "postcontent" },
+			{ "name" : "div", "class": "postinfo" },
+			{ "name" : "div", "class": "posterinfo" },
+			{ "name" : "div", "class": "authorinfo" },
+			{ "name" : "em" }
+		],
+		"content_1" : [
+			{ "name" : "td", "class": "postcontent" },
+			{ "name" : "div", "class": "defaultpost" },
+			{ "name" : "div" },
+			{ "name" : "div", "class": "t_msgfontfix" },
+			{ "name" : "table" },
+			{ "name" : "tr" },
+			{ "name" : "td", "class": "t_msgfont" }
+		],
+		"content_2" : [
+			{ "name" : "td", "class": "postcontent" },
+			{ "name" : "div", "class": "defaultpost" },
+			{ "name" : "div" },
+			{ "name" : "div", "class": "locked" },
+			{ "name" : "table" },
+			{ "name" : "tr" },
+			{ "name" : "td", "class": "t_msgfont" }
+		]
+	}
+}

@@ -7,11 +7,16 @@ namespace ForumClient
     {
         public App()
         {
+            var config = new Api.Config();
 #if __IOS__
             string config_file = System.IO.Path.Combine(Foundation.NSBundle.MainBundle.BundlePath, "json/hipda.json");
-            var config = new Api.Config();
             config.LoadFromFile(config_file);
             client = new ForumClient.Api.Client("hipda", config);
+#elif __ANDROID__
+            using (var stream = Android.App.Application.Context.ApplicationContext.Assets.Open("json/hipda.json"))
+            {
+                config.LoadFromStream(new System.IO.StreamReader(stream));
+            }
 #endif
 
             InitializeComponent();
@@ -28,11 +33,7 @@ namespace ForumClient
             }
         }
 
-#if __IOS__
         public Api.Client client;
-#endif
-#if __ANDROID__
-#endif
 
         protected override void OnStart()
         {
