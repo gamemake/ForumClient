@@ -46,8 +46,11 @@ namespace ForumClient.Api
         public List<ConfigItem> post_auth_name = new List<ConfigItem>();
         public List<ConfigItem> post_auth_id = new List<ConfigItem>();
         public List<ConfigItem> post_time = new List<ConfigItem>();
+        public string post_time_left = "";
+        public string post_time_right = "";
         public List<ConfigItem> post_content_1 = new List<ConfigItem>();
         public List<ConfigItem> post_content_2 = new List<ConfigItem>();
+        public List<ConfigItem> post_content_ignore = new List<ConfigItem>();
 
         string GetItemString(JObject obj, string name)
         {
@@ -119,16 +122,19 @@ namespace ForumClient.Api
                 retval.thread_last_auth_id = GetList(thread_list["last_auth_id"] as JArray);
                 retval.thread_last_time = GetList(thread_list["last_time"] as JArray);
 
-                var post_list = JsonRoot["post_list"];
+                var post_list = JsonRoot["post_list"] as JObject;
                 retval.post_root = GetList(post_list["post_root"] as JArray);
                 retval.post_start = GetList(post_list["post_start"] as JArray);
                 retval.post_id = GetList(post_list["post_id"] as JArray);
                 retval.post_auth_name = GetList(post_list["post_auth_name"] as JArray);
                 retval.post_auth_id = GetList(post_list["post_auth_id"] as JArray);
                 retval.post_time = GetList(post_list["post_time"] as JArray);
+                retval.post_time_left = GetItemString(post_list, "post_time_left");
+                retval.post_time_right = GetItemString(post_list, "post_time_right");
                 retval.post_content_1 = GetList(post_list["content_1"] as JArray);
                 retval.post_content_2 = GetList(post_list["content_2"] as JArray);
-
+                retval.post_content_ignore = GetList(post_list["content_ignore"] as JArray);
+                
                 return true;
             }
         }
