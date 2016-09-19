@@ -52,7 +52,7 @@ namespace ForumClient.Api
         public List<ConfigItem> post_content_1 = new List<ConfigItem>();
         public List<ConfigItem> post_content_2 = new List<ConfigItem>();
 
-        private static List<ConfigItem> GetList(JArray data)
+        List<ConfigItem> GetList(JArray data)
         {
             var retval = new List<ConfigItem>();
             for (int i = 0; i < data.Count; i++)
@@ -67,7 +67,7 @@ namespace ForumClient.Api
             return retval;
         }
 
-        public static Config Load(string file)
+        public bool LoadFromFile(string file)
         {
             try
             {
@@ -76,7 +76,7 @@ namespace ForumClient.Api
                     using (var json_stream = new JsonTextReader(file_stream))
                     {
                         var JsonRoot = (JObject)JToken.ReadFrom(json_stream);
-                        var retval = new Config();
+                        var retval = this;
 
                         retval.text_encoder = JsonRoot["text_encoder"].ToString();
                         retval.base_url = JsonRoot["base_url"].ToString();
@@ -119,14 +119,14 @@ namespace ForumClient.Api
                         retval.post_content_1 = GetList(post_list["content_1"] as JArray);
                         retval.post_content_2 = GetList(post_list["content_2"] as JArray);
 
-                        return retval;
+                        return true;
                     }
                 }
             }
             catch
             {
             }
-            return null;
+            return false;
         }
     }
 }

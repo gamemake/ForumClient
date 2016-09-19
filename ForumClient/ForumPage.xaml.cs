@@ -89,34 +89,42 @@ namespace ForumClient
 
             var c = (Application.Current as App).client;
             if (page < 1) page = 1;
-            MaxPageIndex = page;
-            currentForumId = forumId;
 
             var start = DateTime.UtcNow;
             var list = await c.GetForum(forumId, page);
             Console.WriteLine("GetThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
 
-            if (page == 1)
+            if (list == null)
             {
-                threadListData = new ObservableCollection<ThreadMenuItem>();
-                tidSet.Clear();
+                await DisplayAlert("提示错误", "数据刷新失败", "确定");
             }
-
-            foreach (var item in list)
+            else
             {
-                var tid = item.OnTop ? "OnTop" + item.Id : item.Id;
-                if (!tidSet.Contains(tid))
+                MaxPageIndex = page;
+                currentForumId = forumId;
+
+                if (page == 1)
                 {
-                    tidSet.Add(item.Id);
-                    threadListData.Add(new ThreadMenuItem(item));
+                    threadListData = new ObservableCollection<ThreadMenuItem>();
+                    tidSet.Clear();
                 }
-            }
 
-            if (page == 1)
-            {
-                start = DateTime.UtcNow;
-                threadList.ItemsSource = threadListData;
-                Console.WriteLine("UpdateThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+                foreach (var item in list)
+                {
+                    var tid = item.OnTop ? "OnTop" + item.Id : item.Id;
+                    if (!tidSet.Contains(tid))
+                    {
+                        tidSet.Add(item.Id);
+                        threadListData.Add(new ThreadMenuItem(item));
+                    }
+                }
+
+                if (page == 1)
+                {
+                    start = DateTime.UtcNow;
+                    threadList.ItemsSource = threadListData;
+                    Console.WriteLine("UpdateThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+                }
             }
 
             threadList.EndRefresh();
@@ -133,7 +141,7 @@ namespace ForumClient
                 var navPage = Parent as NavigationPage;
                 var page = new ThreadPage();
                 await navPage.Navigation.PushAsync(page);
-                page.Update(item.SubID);
+                page.Update(item.Data);
             }
         }
 
@@ -154,13 +162,21 @@ namespace ForumClient
 
             threadListData = new ObservableCollection<ThreadMenuItem>();
             tidSet.Clear();
-            foreach (var item in list)
+
+            if (list == null)
             {
-                var tid = item.OnTop ? "OnTop" + item.Id : item.Id;
-                if (!tidSet.Contains(tid))
+                await DisplayAlert("提示错误", "数据刷新失败", "确定");
+            }
+            else
+            {
+                foreach (var item in list)
                 {
-                    tidSet.Add(item.Id);
-                    threadListData.Add(new ThreadMenuItem(item));
+                    var tid = item.OnTop ? "OnTop" + item.Id : item.Id;
+                    if (!tidSet.Contains(tid))
+                    {
+                        tidSet.Add(item.Id);
+                        threadListData.Add(new ThreadMenuItem(item));
+                    }
                 }
             }
 

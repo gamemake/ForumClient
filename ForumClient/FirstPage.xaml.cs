@@ -44,15 +44,22 @@ namespace ForumClient
             var list = await c.GetForumList();
             Console.WriteLine("GetForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
 
-            var forumListData = new ObservableCollection<ForumMenuItem>();
-            foreach (var item in list)
+            if (list == null)
             {
-                forumListData.Add(new ForumMenuItem() { Title = item.Name, Description = item.Desc, SubID = item.Id });
+                await DisplayAlert("提示错误", "数据刷新失败", "确定");
             }
+            else
+            {
+                var forumListData = new ObservableCollection<ForumMenuItem>();
+                foreach (var item in list)
+                {
+                    forumListData.Add(new ForumMenuItem() { Title = item.Name, Description = item.Desc, SubID = item.Id });
+                }
 
-            start = DateTime.UtcNow;
-            forumList.ItemsSource = forumListData;
-            Console.WriteLine("UpdateForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+                start = DateTime.UtcNow;
+                forumList.ItemsSource = forumListData;
+                Console.WriteLine("UpdateForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+            }
 
             forumList.EndRefresh();
         }
@@ -65,15 +72,22 @@ namespace ForumClient
             var list = await c.GetForumList();
             Console.WriteLine("GetForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
 
-            var forumListData = new ObservableCollection<ForumMenuItem>();
-            foreach (var item in list)
+            if (list == null)
             {
-                forumListData.Add(new ForumMenuItem() { Title = item.Name, Description = item.Desc, SubID = item.Id });
+                await DisplayAlert("提示错误", "数据刷新失败", "确定");
             }
+            else
+            {
+                var forumListData = new ObservableCollection<ForumMenuItem>();
+                foreach (var item in list)
+                {
+                    forumListData.Add(new ForumMenuItem() { Title = item.Name, Description = item.Desc, SubID = item.Id });
+                }
 
-            start = DateTime.UtcNow;
-            forumList.ItemsSource = forumListData;
-            Console.WriteLine("UpdateForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+                start = DateTime.UtcNow;
+                forumList.ItemsSource = forumListData;
+                Console.WriteLine("UpdateForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+            }
 
             forumList.EndRefresh();
         }

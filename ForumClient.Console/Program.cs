@@ -17,7 +17,8 @@ namespace ForumClient
             try
             {
 
-                var config = Api.Config.Load("/Users/gamemake/Projects/ForumClient/Data/hipda.json");
+                var config = new Api.Config();
+                config.LoadFromFile("/Users/gamemake/Projects/ForumClient/Data/hipda.json");
                 var client = new Api.Client("hipda", config);
 
                 //await client.SignIn("gamemake", "123456");

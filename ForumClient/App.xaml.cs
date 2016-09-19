@@ -1,4 +1,5 @@
 ﻿using Xamarin.Forms;
+using ForumClient;
 
 namespace ForumClient
 {
@@ -6,6 +7,13 @@ namespace ForumClient
     {
         public App()
         {
+#if __IOS__
+            string config_file = System.IO.Path.Combine(Foundation.NSBundle.MainBundle.BundlePath, "json/hipda.json");
+            var config = new Api.Config();
+            config.LoadFromFile(config_file);
+            client = new ForumClient.Api.Client("hipda", config);
+#endif
+
             InitializeComponent();
 
             if (client.IsAuthed())
@@ -20,7 +28,11 @@ namespace ForumClient
             }
         }
 
-        public Api.Client client = new Api.Client("", null);
+#if __IOS__
+        public Api.Client client;
+#endif
+#if __ANDROID__
+#endif
 
         protected override void OnStart()
         {

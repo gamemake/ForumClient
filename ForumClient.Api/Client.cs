@@ -88,7 +88,7 @@ namespace ForumClient.Api
             this.cookies = new System.Net.CookieContainer();
             if (System.IO.File.Exists(this.cookie_file))
             {
-                LoadCookies(this.cookie_file);
+                LoadCookies();
             }
 
             var handler = new HttpClientHandler();
@@ -114,19 +114,19 @@ namespace ForumClient.Api
             return false;
         }
 
-        public void SaveCookies(string filename)
+        public void SaveCookies()
         {
             var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-            using (var s = System.IO.File.Create(filename))
+            using (var s = System.IO.File.Create(cookie_file))
             {
                 formatter.Serialize(s, cookies);
             }
         }
 
-        public void LoadCookies(string filename)
+        public void LoadCookies()
         {
             var formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-            using (var s = System.IO.File.OpenRead(filename))
+            using (var s = System.IO.File.OpenRead(cookie_file))
             {
                 var v = formatter.Deserialize(s);
                 var c = v as System.Net.CookieContainer;
@@ -140,31 +140,41 @@ namespace ForumClient.Api
 
         public async Task<string> SignIn(string username, string password)
         {
-            var param = new Dictionary<string, string>();
-            param.Add("formhash", "37b0d4e3");
-            param.Add("referer", config.forumlist_url);
-            param.Add("loginfield", "username");
-            param.Add("username", username);
-            param.Add("password", MD5Password(password));
-            param.Add("questionid", "0");
-            param.Add("answer", "");
-            param.Add("loginsubmit", "true");
-            param.Add("cookietime", "2592000");
             string error;
-            using (var resp = await client.PostAsync(config.login_url, new FormUrlEncodedContent(param)))
+
+            try
             {
-                var data = await resp.Content.ReadAsByteArrayAsync();
-                var text = System.Text.Encoding.GetEncoding(config.text_encoder).GetString(data);
-                if (text.IndexOf(config.forumlist_url, StringComparison.CurrentCulture) > 0)
+                var param = new Dictionary<string, string>();
+                param.Add("formhash", "37b0d4e3");
+                param.Add("referer", config.forumlist_url);
+                param.Add("loginfield", "username");
+                param.Add("username", username);
+                param.Add("password", MD5Password(password));
+                param.Add("questionid", "0");
+                param.Add("answer", "");
+                param.Add("loginsubmit", "true");
+                param.Add("cookietime", "2592000");
+                using (var resp = await client.PostAsync(config.login_url, new FormUrlEncodedContent(param)))
                 {
-                    error = "";
+                    var data = await resp.Content.ReadAsByteArrayAsync();
+                    var text = System.Text.Encoding.GetEncoding(config.text_encoder).GetString(data);
+                    if (text.IndexOf(config.forumlist_url, StringComparison.CurrentCulture) > 0)
+                    {
+                        error = "";
+                    }
+                    else
+                    {
+                        if (text.IndexOf("CDATA[", StringComparison.CurrentCulture) > 0) text = text.Substring(text.IndexOf("CDATA[", StringComparison.CurrentCulture) + 6);
+                        if (text.IndexOf("]]", StringComparison.CurrentCulture) > 0) text = text.Substring(0, text.IndexOf("]]", StringComparison.CurrentCulture));
+                        error = text;
+                    }
                 }
-                else
-                {
-                    if (text.IndexOf("CDATA[", StringComparison.CurrentCulture) > 0) text = text.Substring(text.IndexOf("CDATA[", StringComparison.CurrentCulture) + 6);
-                    if (text.IndexOf("]]", StringComparison.CurrentCulture) > 0) text = text.Substring(0, text.IndexOf("]]", StringComparison.CurrentCulture));
-                    error = text;
-                }
+            }
+            catch (Exception e)
+            {
+                error = e.Message;
+                Console.WriteLine("Exception  : {0}", e.Message);
+                Console.WriteLine("StackTrace : {0}", e.StackTrace);
             }
 
             if (!IsAuthed() && error == "")
@@ -180,9 +190,18 @@ namespace ForumClient.Api
         public async Task<bool> SignOut()
         {
             bool result = true;
-            using (var resp = await client.GetAsync(config.logout_url))
+            try
             {
-                await resp.Content.ReadAsByteArrayAsync();
+                using (var resp = await client.GetAsync(config.logout_url))
+                {
+                    await resp.Content.ReadAsByteArrayAsync();
+                }
+            }
+            catch (Exception e)
+            {
+                result = false;
+                Console.WriteLine("Exception  : {0}", e.Message);
+                Console.WriteLine("StackTrace : {0}", e.StackTrace);
             }
             return result;
         }
@@ -190,44 +209,53 @@ namespace ForumClient.Api
         public async Task<List<Forum>> GetForumList()
         {
             var forums = new List<Forum>();
-            using (var resp = await client.GetAsync(config.forumlist_url))
+            try
             {
-                var data = await resp.Content.ReadAsByteArrayAsync();
-                var doc = new HtmlDocument();
-                doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
-
-                var forum_root = GetElement(doc.DocumentNode, config.forum_root, 0);
-                if (forum_root != null)
+                using (var resp = await client.GetAsync(config.forumlist_url))
                 {
-                    foreach (var child1 in forum_root.ChildNodes)
+                    var data = await resp.Content.ReadAsByteArrayAsync();
+                    var doc = new HtmlDocument();
+                    doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
+
+                    var forum_root = GetElement(doc.DocumentNode, config.forum_root, 0);
+                    if (forum_root != null)
                     {
-                        var forum_category = GetElement(child1, config.forum_category);
-                        if (forum_category == null) continue;
-
-                        foreach (var child in forum_category.ChildNodes)
+                        foreach (var child1 in forum_root.ChildNodes)
                         {
-                            var forum_start = GetElement(child, config.forum_start);
-                            if (forum_start == null) continue;
+                            var forum_category = GetElement(child1, config.forum_category);
+                            if (forum_category == null) continue;
 
-                            var forum = new Forum();
-                            HtmlNode node;
+                            foreach (var child in forum_category.ChildNodes)
+                            {
+                                var forum_start = GetElement(child, config.forum_start);
+                                if (forum_start == null) continue;
 
-                            node = GetElement(forum_start, config.forum_id, 0);
-                            if (node == null) continue;
-                            forum.Id = GetUrlString(GetAttributeValue(node, "href"), "fid=", "&");
+                                var forum = new Forum();
+                                HtmlNode node;
 
-                            node = GetElement(forum_start, config.forum_title, 0);
-                            if (node == null) continue;
-                            forum.Name = node.InnerText;
+                                node = GetElement(forum_start, config.forum_id, 0);
+                                if (node == null) continue;
+                                forum.Id = GetUrlString(GetAttributeValue(node, "href"), "fid=", "&");
 
-                            node = GetElement(forum_start, config.forum_desc, 0);
-                            if (node == null) continue;
-                            forum.Desc = node.InnerText;
+                                node = GetElement(forum_start, config.forum_title, 0);
+                                if (node == null) continue;
+                                forum.Name = node.InnerText;
 
-                            forums.Add(forum);
+                                node = GetElement(forum_start, config.forum_desc, 0);
+                                if (node == null) continue;
+                                forum.Desc = node.InnerText;
+
+                                forums.Add(forum);
+                            }
                         }
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Exception  : {0}", e.Message);
+                Console.WriteLine("StackTrace : {0}", e.StackTrace);
+                return null;
             }
             return forums;
         }
@@ -235,68 +263,77 @@ namespace ForumClient.Api
         public async Task<List<Thread>> GetForum(string fid, int page)
         {
             var threads = new List<Thread>();
-            var url = string.Format(config.threadlist_url, fid, page);
-            using (var resp = await client.GetAsync(url))
+            try
             {
-                var data = await resp.Content.ReadAsByteArrayAsync();
-                var doc = new HtmlDocument();
-                doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
-
-                var thread_root = GetElement(doc.DocumentNode, config.thread_root, 0);
-                if (thread_root != null)
+                var url = string.Format(config.threadlist_url, fid, page);
+                using (var resp = await client.GetAsync(url))
                 {
-                    foreach (var child in thread_root.ChildNodes)
+                    var data = await resp.Content.ReadAsByteArrayAsync();
+                    var doc = new HtmlDocument();
+                    doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
+
+                    var thread_root = GetElement(doc.DocumentNode, config.thread_root, 0);
+                    if (thread_root != null)
                     {
-                        var thread_start = GetElement(child, config.thread_start);
-                        if (thread_start == null) continue;
-
-                        if (GetElement(child, config.thread_default) != null)
+                        foreach (var child in thread_root.ChildNodes)
                         {
-                            for (int i = 0; i < threads.Count; i++)
+                            var thread_start = GetElement(child, config.thread_start);
+                            if (thread_start == null) continue;
+
+                            if (GetElement(child, config.thread_default, 0) != null)
                             {
-                                threads[i].OnTop = true;
+                                for (int i = 0; i < threads.Count; i++)
+                                {
+                                    threads[i].OnTop = true;
+                                }
+                                continue;
                             }
-                            continue;
+
+                            var thread = new Thread();
+                            HtmlNode node;
+
+                            node = GetElement(thread_start, config.thread_id, 0);
+                            if (node == null) continue;
+                            thread.Id = GetUrlString(GetAttributeValue(node, "href"), "tid=", "&");
+
+                            node = GetElement(thread_start, config.thread_title, 0);
+                            if (node == null) continue;
+                            thread.Title = node.InnerText;
+
+                            node = GetElement(thread_start, config.thread_post_auth_name, 0);
+                            if (node == null) continue;
+                            thread.Author.Name = node.InnerText;
+
+                            node = GetElement(thread_start, config.thread_post_auth_id, 0);
+                            if (node == null) continue;
+                            thread.Author.Id = GetUrlString(GetAttributeValue(node, "href"), "uid=", "&");
+
+                            node = GetElement(thread_start, config.thread_post_time, 0);
+                            if (node == null) continue;
+                            thread.PostTime = node.InnerText;
+
+                            node = GetElement(thread_start, config.thread_last_auth_name, 0);
+                            if (node != null)
+                                thread.Last_Author.Name = node.InnerText;
+
+                            node = GetElement(thread_start, config.thread_last_auth_id, 0);
+                            if (node != null)
+                                thread.Last_Author.Id = GetUrlString(GetAttributeValue(node, "href"), "username=", "&");
+
+                            node = GetElement(thread_start, config.thread_last_time, 0);
+                            if (node != null)
+                                thread.Last_PostTime = node.InnerText;
+
+                            threads.Add(thread);
                         }
-
-                        var thread = new Thread();
-                        HtmlNode node;
-
-                        node = GetElement(thread_start, config.thread_id, 0);
-                        if (node == null) continue;
-                        thread.Id = GetUrlString(GetAttributeValue(node, "href"), "tid=", "&");
-
-                        node = GetElement(thread_start, config.thread_title, 0);
-                        if (node == null) continue;
-                        thread.Title = node.InnerText;
-
-                        node = GetElement(thread_start, config.thread_post_auth_name, 0);
-                        if (node == null) continue;
-                        thread.Author.Name = node.InnerText;
-
-                        node = GetElement(thread_start, config.thread_post_auth_id, 0);
-                        if (node == null) continue;
-                        thread.Author.Id = GetUrlString(GetAttributeValue(node, "href"), "uid=", "&");
-
-                        node = GetElement(thread_start, config.thread_post_time, 0);
-                        if (node == null) continue;
-                        thread.PostTime = node.InnerText;
-
-                        node = GetElement(thread_start, config.thread_last_auth_name, 0);
-                        if (node != null)
-                            thread.Last_Author.Name = node.InnerText;
-
-                        node = GetElement(thread_start, config.thread_last_auth_id, 0);
-                        if (node != null)
-                            thread.Last_Author.Id = GetUrlString(GetAttributeValue(node, "href"), "username=", "&");
-
-                        node = GetElement(thread_start, config.thread_last_time, 0);
-                        if (node != null)
-                            thread.Last_PostTime = node.InnerText;
-
-                        threads.Add(thread);
                     }
                 }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Exception  : {0}", e.Message);
+                Console.WriteLine("StackTrace : {0}", e.StackTrace);
+                return null;
             }
             return threads;
         }
@@ -304,50 +341,58 @@ namespace ForumClient.Api
         public async Task<List<Post>> GetThread(string tid, int page)
         {
             var retval = new List<Post>();
-            var url = string.Format(config.postlist_url, tid, page);
-            using (var resp = await client.GetAsync(url))
+            try
             {
-                var data = await resp.Content.ReadAsByteArrayAsync();
-                var doc = new HtmlDocument();
-                doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
-
-                var post_root = GetElement(doc.DocumentNode, config.post_root, 0);
-                foreach (var child in post_root.ChildNodes)
+                var url = string.Format(config.postlist_url, tid, page);
+                using (var resp = await client.GetAsync(url))
                 {
-                    var post_start = GetElement(child, config.post_start);
-                    if (post_start == null) continue;
+                    var data = await resp.Content.ReadAsByteArrayAsync();
+                    var doc = new HtmlDocument();
+                    doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding("gbk"));
 
-                    PrintNode(0, post_start);
-
-                    var post = new Post();
-                    HtmlNode node;
-
-                    node = GetElement(post_start, config.post_id, 0);
-                    if (node == null) continue;
-                    post.Id = node.InnerText;
-
-                    node = GetElement(post_start, config.post_auth_name, 0);
-                    if (node == null) continue;
-                    post.Id = node.InnerText;
-
-                    node = GetElement(post_start, config.post_auth_id, 0);
-                    if (node == null) continue;
-                    post.Author.Name = GetUrlString(GetAttributeValue(node, "href"), "uid=", "&");
-
-                    node = GetElement(post_start, config.post_time, 0);
-                    if (node == null) continue;
-                    post.PostTime = node.InnerText;
-
-                    node = GetElement(post_start, config.post_content_1, 0);
-                    if (node == null)
+                    var post_root = GetElement(doc.DocumentNode, config.post_root, 0);
+                    foreach (var child in post_root.ChildNodes)
                     {
-                        node = GetElement(post_start, config.post_content_2, 0);
-                        if (node == null) continue;
-                    }
-                    ParseHtmlNode(post.Nodes, node);
+                        var post_start = GetElement(child, config.post_start);
+                        if (post_start == null) continue;
 
-                    retval.Add(post);
+                        var post = new Post();
+                        HtmlNode node;
+
+                        node = GetElement(post_start, config.post_id, 0);
+                        if (node == null) continue;
+                        post.Id = node.InnerText;
+
+                        node = GetElement(post_start, config.post_auth_name, 0);
+                        if (node == null) continue;
+                        post.Id = node.InnerText;
+
+                        node = GetElement(post_start, config.post_auth_id, 0);
+                        if (node == null) continue;
+                        post.Author.Name = GetUrlString(GetAttributeValue(node, "href"), "uid=", "&");
+
+                        node = GetElement(post_start, config.post_time, 0);
+                        if (node == null) continue;
+                        post.PostTime = node.InnerText;
+
+                        node = GetElement(post_start, config.post_content_1, 0);
+                        if (node == null)
+                        {
+                            node = GetElement(post_start, config.post_content_2, 0);
+                            if (node == null) continue;
+                        }
+                        ParseHtmlNode(post.Nodes, node);
+
+                        retval.Add(post);
+                    }
                 }
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Exception  : {0}", e.Message);
+                Console.WriteLine("StackTrace : {0}", e.StackTrace);
+                return null;
             }
             return retval;
         }

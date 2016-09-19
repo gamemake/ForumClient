@@ -23,8 +23,7 @@ namespace ForumClient
             var result = await c.SignIn(UsernameEntry.Text, PasswordEntry.Text);
             if (result == "")
             {
-                var cookie = System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal), "Cookies.bin");
-                c.SaveCookies(cookie);
+                c.SaveCookies();
                 OnAnonymousLogin(sender, e);
             }
             else
