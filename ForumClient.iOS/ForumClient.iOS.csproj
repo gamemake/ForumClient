@@ -199,6 +199,7 @@
     <BundleResource Include="Resources\Icon-60%403x.png" />
     <BundleResource Include="Resources\Icon-60%402x.png" />
     <BundleResource Include="Resources\json\hipda.json" />
+    <BundleResource Include="Resources\json\1024.json" />
   </ItemGroup>
   <Import Project="..\HtmlAgilityPack\HtmlAgilityPack.projitems" Label="Shared" Condition="Exists('..\HtmlAgilityPack\HtmlAgilityPack.projitems')" />
   <Import Project="..\ForumClient.Api\ForumClient.Api.projitems" Label="Shared" Condition="Exists('..\ForumClient.Api\ForumClient.Api.projitems')" />
