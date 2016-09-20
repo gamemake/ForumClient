@@ -158,6 +158,21 @@
 		"content_ignore" : [
 			{ "name" : "div", "class": "t_attach" },
 			{ "name" : "span", "style": "position: absolute; display: none" }
+		],
+		"pages_start" : [
+			{ "name" : "html" },
+			{ "name" : "body" },
+			{ "name" : "div", "id": "wrap" },
+			{ "name" : "div", "id": "forumcontrol" },
+			{ "name" : "table"},
+			{ "name" : "tr"},
+			{ "name" : "td"},
+			{ "name" : "div", "class": "pages" }
+		],
+		"pages_end" : [
+		],
+		"pages_next" : [
+			{ "name" : "a", "class": "next" }
 		]
 	}
 }

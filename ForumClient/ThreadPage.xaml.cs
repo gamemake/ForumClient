@@ -17,6 +17,7 @@ namespace ForumClient
         private bool IsLoading = false;
         private int totalNode = 0;
         private int currentNode = 0;
+        private bool lastPage = false;
 
         public ThreadPage(Api.Thread info)
         {
@@ -44,7 +45,7 @@ namespace ForumClient
             IsLoading = true;
 
             var start = DateTime.UtcNow;
-            var list = await App.GetClient().GetThread(threadInfo.Id, currentPage + 1);
+            var list = await App.GetClient().GetThread(threadInfo.Id, currentPage + 1, () => { lastPage = true; });
             if (list != null)
             {
                 Console.WriteLine("GetThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
@@ -217,7 +218,10 @@ namespace ForumClient
         {
             if (scrollView.ScrollY + scrollView.Height * 1.5 > scrollView.ContentSize.Height)
             {
-                Fetch();
+                if (!lastPage)
+                {
+                    Fetch();
+                }
             }
         }
     }

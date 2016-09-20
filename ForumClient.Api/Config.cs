@@ -51,6 +51,9 @@ namespace ForumClient.Api
         public List<ConfigItem> post_content_1 = new List<ConfigItem>();
         public List<ConfigItem> post_content_2 = new List<ConfigItem>();
         public List<ConfigItem> post_content_ignore = new List<ConfigItem>();
+        public List<ConfigItem> post_pages_start = new List<ConfigItem>();
+        public List<ConfigItem> post_pages_end = new List<ConfigItem>();
+        public List<ConfigItem> post_pages_next = new List<ConfigItem>();
 
         string GetItemString(JObject obj, string name)
         {
@@ -134,7 +137,10 @@ namespace ForumClient.Api
                 retval.post_content_1 = GetList(post_list["content_1"] as JArray);
                 retval.post_content_2 = GetList(post_list["content_2"] as JArray);
                 retval.post_content_ignore = GetList(post_list["content_ignore"] as JArray);
-                
+                retval.post_pages_start = GetList(post_list["pages_start"] as JArray);
+                retval.post_pages_end = GetList(post_list["pages_end"] as JArray);
+                retval.post_pages_next = GetList(post_list["pages_next"] as JArray);
+
                 return true;
             }
         }

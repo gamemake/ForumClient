@@ -134,6 +134,21 @@
 		],
 		"content_ignore" : [
 			{ "name" : "div", "class": "tiptop" }
+		],
+		"pages_start" : [
+			{ "name" : "html" },
+			{ "name" : "body" },
+			{ "name" : "div", "id": "main" },
+			{ "name" : "div", "class": "t3" },
+			{ "name" : "table"},
+			{ "name" : "tr"},
+			{ "name" : "td"},
+			{ "name" : "div", "class": "pages" }
+		],
+		"pages_end" : [
+			{ "name" : "a", "id": "last", "class": "gray" }
+		],
+		"pages_next" : [
 		]
 	}
 }

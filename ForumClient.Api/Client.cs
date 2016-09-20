@@ -51,6 +51,8 @@ namespace ForumClient.Api
 
     public class Client
     {
+        public delegate void PageEndNotify();
+
         private Config config;
         private string cookie_file;
         private System.Net.CookieContainer cookies;
@@ -337,7 +339,7 @@ namespace ForumClient.Api
             return threads;
         }
 
-        public async Task<List<Post>> GetThread(string tid, int page)
+        public async Task<List<Post>> GetThread(string tid, int page, PageEndNotify notify = null)
         {
             var retval = new List<Post>();
             try
@@ -370,7 +372,7 @@ namespace ForumClient.Api
                             continue;
                         post.Author.Name = node.InnerText;
 
-                        if(config.post_auth_id.Count>0)
+                        if (config.post_auth_id.Count > 0)
                         {
                             node = GetElement(post_start, config.post_auth_id, 0);
                             if (node == null) continue;
@@ -404,6 +406,33 @@ namespace ForumClient.Api
 
                         retval.Add(post);
                     }
+
+                    var last_page = true;
+                    var pages_start = GetElement(doc.DocumentNode, config.post_pages_start, 0);
+                    if (pages_start != null)
+                    {
+                        if (config.post_pages_end.Count > 0)
+                        {
+                            last_page = false;
+                            if (GetElement(pages_start, config.post_pages_end, 0) != null)
+                            {
+                                last_page = true;
+                            }
+                        }
+                        if (config.post_pages_next.Count > 0)
+                        {
+                            last_page = true;
+                            if (GetElement(pages_start, config.post_pages_next, 0) != null)
+                            {
+                                last_page = false;
+                            }
+                        }
+                    }
+
+                    if (last_page)
+                    {
+                        notify();
+                    }
                 }
             }
             catch (Exception e)
@@ -435,13 +464,13 @@ namespace ForumClient.Api
                 {
                     if (pair.Value != node.Name) return false;
                 }
-                else if(pair.Key== "inner_html")
+                else if (pair.Key == "inner_html")
                 {
                     if (node.InnerHtml != pair.Value) return false;
                 }
                 else
                 {
-                    if(pair.Value != GetAttributeValue(node, pair.Key) && (pair.Value != "*" || GetAttributeValue(node, pair.Key) == "")) return false;
+                    if (pair.Value != GetAttributeValue(node, pair.Key) && (pair.Value != "*" || GetAttributeValue(node, pair.Key) == "")) return false;
                 }
             }
             return true;
@@ -555,7 +584,7 @@ namespace ForumClient.Api
         {
             if (basenode.NodeType == HtmlNodeType.Element)
             {
-                foreach(var c in config.post_content_ignore)
+                foreach (var c in config.post_content_ignore)
                 {
                     if (CheckElement(basenode, c))
                     {
@@ -641,25 +670,6 @@ namespace ForumClient.Api
             {
                 ParseHtmlNode(nodes, node);
             }
-        }
-
-        public async System.Threading.Tasks.Task<byte[]> GetRawData(string url, bool redirect)
-        {
-            try
-            {
-                do
-                {
-                    using (var resp = await client.GetAsync(url))
-                    {
-                        var data = await resp.Content.ReadAsByteArrayAsync();
-                        return data;
-                    }
-                } while (redirect);
-            }
-            catch (Exception)
-            {
-            }
-            return null;
         }
 
         public async System.Threading.Tasks.Task<HtmlDocument> GetHtmlDocument(string url, bool redirect)
