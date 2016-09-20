@@ -19,11 +19,10 @@ namespace ForumClient
 
         async void OnSignIn(object sender, EventArgs e)
         {
-            var c = (Application.Current as App).client;
-            var result = await c.SignIn(UsernameEntry.Text, PasswordEntry.Text);
+            var result = await App.GetClient().SignIn(UsernameEntry.Text, PasswordEntry.Text);
             if (result == "")
             {
-                c.SaveCookies();
+                App.GetClient().SaveCookies();
                 OnAnonymousLogin(sender, e);
             }
             else

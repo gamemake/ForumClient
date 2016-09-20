@@ -5,20 +5,29 @@ namespace ForumClient
 {
     public partial class App : Application
     {
+        private Api.Client client;
+
+        public static Api.Client GetClient()
+        {
+            return (Application.Current as App).client;
+        }
+
         public App()
         {
             var config = new Api.Config();
+            string config_name = "1024";
+
 #if __IOS__
-            string config_file = System.IO.Path.Combine(Foundation.NSBundle.MainBundle.BundlePath, "json/hipda.json");
+            string config_file = System.IO.Path.Combine(Foundation.NSBundle.MainBundle.BundlePath, "json/" + config_name +".json");
             config.LoadFromFile(config_file);
 #elif __ANDROID__
-            using (var stream = Android.App.Application.Context.ApplicationContext.Assets.Open("json/1024.json"))
+            using (var stream = Android.App.Application.Context.ApplicationContext.Assets.Open("json/" + config_name +".json"))
             {
                 config.LoadFromStream(new System.IO.StreamReader(stream));
             }
 #endif
 
-            client = new ForumClient.Api.Client("1024", config);
+            client = new ForumClient.Api.Client(config_name, config);
 
             InitializeComponent();
 
@@ -33,8 +42,6 @@ namespace ForumClient
                 MainPage = new NavigationPage(new AccountPage());
             }
         }
-
-        public Api.Client client;
 
         protected override void OnStart()
         {

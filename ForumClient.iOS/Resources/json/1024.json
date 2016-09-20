@@ -1,12 +1,12 @@
 
 {
 	"text_encoder" : "gbk",
-	"base_url" : "http://www.t66y.com",
-	"login_url" : "http://www.t66y.com/logging.php?action=login&loginsubmit=yes&inajax=1",
-	"logout_url" : "http://www.t66y.com/logging.php?action=logout&formhash=420b6ba6",
-	"forumlist_url" : "http://www.t66y.com/index.php",
-	"threadlist_url" : "http://www.t66y.com/thread0806.php?fid={0}&search=&page={1}",
-	"postlist_url" : "http://www.t66y.com/read.php?tid={0}&page={1}",
+	"base_url" : "http://cl.dicool.pw",
+	"login_url" : "http://cl.dicool.pw/logging.php?action=login&loginsubmit=yes&inajax=1",
+	"logout_url" : "http://cl.dicool.pw/logging.php?action=logout&formhash=420b6ba6",
+	"forumlist_url" : "http://cl.dicool.pw/index.php",
+	"threadlist_url" : "http://cl.dicool.pw/thread0806.php?fid={0}&search=&page={1}",
+	"postlist_url" : "http://cl.dicool.pw/read.php?tid={0}&page={1}",
 	"cookie_check" : "cdb_auth",
 	"login_messge" : "CDATA[.*]]",
 	"forum_list" : {
@@ -98,35 +98,30 @@
 			{ "name" : "table" }
 		],
 		"post_id" : [
-			{ "name" : "tr", "class": "tr1 do_not_catch" },
-			{ "name" : "th", "height": "100%" },
-			{ "name" : "table" },
 			{ "name" : "tr" },
-			{ "name" : "td" },
+			{ "name" : "th", "height": "100%" },
+			{ },
 			{ "name" : "div", "class": "tiptop" },
 			{ "name" : "a", "inner_html": "引用" }
 		],
 		"post_auth_name" : [
-			{ "name" : "tr", "class": "tr1 do_not_catch" },
-			{ "name" : "th", "width": "20%" },
-			{ "name" : "font" },
+			{ "name" : "tr" },
+			{ "name" : "th", "class": "r_two" },
+			{ },
 			{ "name" : "b" }
 		],
 		"post_auth_id" : [
 		],
 		"post_time" : [
-			{ "name" : "tr", "class": "tr1" },
+			{ "name" : "tr" },
 			{ "name" : "th" },
-			{ "name" : "div" }
+			{ "name" : "div", "class": "tipad" }
 		],
 		"post_time_left" : "Posted:",
 		"post_time_right" : "|",
 		"content_1" : [
-			{ "name" : "tr", "class": "tr1 do_not_catch" },
-			{ "name" : "th", "height": "100%" },
-			{ "name" : "table" },
 			{ "name" : "tr" },
-			{ "name" : "td" }
+			{ "name" : "th", "height": "100%" }
 		],
 		"content_2" : [
 			{ "name" : "td", "class": "postcontent" },

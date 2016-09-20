@@ -67,71 +67,84 @@ namespace ForumClient
             }
         }
 
-        ObservableCollection<ThreadMenuItem> threadListData;
-        string currentForumId;
+        private ObservableCollection<ThreadMenuItem> threadListData;
+        private string currentForumId;
+        private int currentPage = 0;
         HashSet<string> tidSet = new HashSet<string>();
         bool IsLoading = false;
-        int MaxPageIndex = 0;
 
-        public ForumPage()
+        public ForumPage(string forumId)
         {
+            currentForumId = forumId;
+            currentPage = 0;
+
             InitializeComponent();
             threadListData = new ObservableCollection<ThreadMenuItem>();
             threadList.ItemsSource = threadListData;
             threadList.RefreshCommand = new Command(PullToRefresh);
         }
 
-        public async void Fetch(string forumId, int page)
+        private void Update(List<Api.Thread> list, bool refresh)
+        {
+            var start = DateTime.UtcNow;
+
+            foreach (var item in list)
+            {
+                var tid = item.OnTop ? "OnTop" + item.Id : item.Id;
+                if (!tidSet.Contains(tid))
+                {
+                    tidSet.Add(item.Id);
+                    threadListData.Add(new ThreadMenuItem(item));
+                }
+            }
+
+            if (refresh)
+            {
+                threadList.ItemsSource = threadListData;
+            }
+
+            Console.WriteLine("UpdateThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+        }
+
+        public async void Fetch(bool refresh=false)
         {
             if (IsLoading) return;
-            IsLoading = true;
-            threadList.BeginRefresh();
 
-            var c = (Application.Current as App).client;
-            if (page < 1) page = 1;
+            IsLoading = true;
+            if(!threadList.IsRefreshing)
+                threadList.BeginRefresh();
+
+            if (refresh)
+            {
+                threadListData = new ObservableCollection<ThreadMenuItem>();
+                currentPage = 0;
+                tidSet.Clear();
+            }
 
             var start = DateTime.UtcNow;
-            var list = await c.GetForum(forumId, page);
-            Console.WriteLine("GetThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+            var list = await App.GetClient().GetForum(currentForumId, currentPage + 1);
+            if (list != null)
+            {
+                Console.WriteLine("GetThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+                currentPage += 1;
+                Update(list, refresh);
+            }
+
+            threadList.EndRefresh();
+            IsLoading = false;
 
             if (list == null)
             {
                 await DisplayAlert("提示错误", "数据刷新失败", "确定");
             }
-            else
-            {
-                MaxPageIndex = page;
-                currentForumId = forumId;
-
-                if (page == 1)
-                {
-                    threadListData = new ObservableCollection<ThreadMenuItem>();
-                    tidSet.Clear();
-                }
-
-                foreach (var item in list)
-                {
-                    var tid = item.OnTop ? "OnTop" + item.Id : item.Id;
-                    if (!tidSet.Contains(tid))
-                    {
-                        tidSet.Add(item.Id);
-                        threadListData.Add(new ThreadMenuItem(item));
-                    }
-                }
-
-                if (page == 1)
-                {
-                    start = DateTime.UtcNow;
-                    threadList.ItemsSource = threadListData;
-                    Console.WriteLine("UpdateThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
-                }
-            }
-
-            threadList.EndRefresh();
-            IsLoading = false;
         }
 
-        async void OnThreadSelected(object sender, SelectedItemChangedEventArgs e)
+        private void PullToRefresh()
+        {
+            Fetch(true);
+        }
+
+        private async void OnThreadSelected(object sender, SelectedItemChangedEventArgs e)
         {
             var item = e.SelectedItem as ThreadMenuItem;
             if (item != null)
@@ -139,59 +152,19 @@ namespace ForumClient
                 threadList.SelectedItem = null;
 
                 var navPage = Parent as NavigationPage;
-                var page = new ThreadPage();
+                var page = new ThreadPage(item.Data);
                 await navPage.Navigation.PushAsync(page);
-                page.Update(item.Data);
+                page.Fetch();
             }
         }
 
-        async void PullToRefresh()
-        {
-            if (IsLoading)
-            {
-                threadList.EndRefresh();
-                return;
-            }
 
-            IsLoading = true;
-            var c = (Application.Current as App).client;
-
-            var start = DateTime.UtcNow;
-            var list = await c.GetForum(currentForumId, 1);
-            Console.WriteLine("GetThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
-
-            threadListData = new ObservableCollection<ThreadMenuItem>();
-            tidSet.Clear();
-
-            if (list == null)
-            {
-                await DisplayAlert("提示错误", "数据刷新失败", "确定");
-            }
-            else
-            {
-                foreach (var item in list)
-                {
-                    var tid = item.OnTop ? "OnTop" + item.Id : item.Id;
-                    if (!tidSet.Contains(tid))
-                    {
-                        tidSet.Add(item.Id);
-                        threadListData.Add(new ThreadMenuItem(item));
-                    }
-                }
-            }
-
-            start = DateTime.UtcNow;
-            threadList.ItemsSource = threadListData;
-            Console.WriteLine("UpdateThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
-            IsLoading = false;
-        }
-
-        void OnItemAppearing(object Sender, ItemVisibilityEventArgs e)
+        private void OnItemAppearing(object Sender, ItemVisibilityEventArgs e)
         {
             var t = e.Item as ThreadMenuItem;
             if (threadListData[threadListData.Count - 1].Id == t.Id)
             {
-                Fetch(currentForumId, MaxPageIndex + 1);
+                Fetch();
             }
         }
     }

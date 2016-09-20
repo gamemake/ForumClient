@@ -7,31 +7,6 @@ using System.Security.Cryptography;
 
 namespace ForumClient.Api
 {
-    public interface IForumFetch
-    {
-        void Begin();
-        void NewForum(string Id, string Name, string Desc);
-        void End();
-    }
-
-    public interface IThreadFetch
-    {
-        void Begin();
-        void NewThread(bool OnTop, string Id, string Title, Author PostMan, string PostTime, Author LastMan, string LastTime);
-        void End();
-    }
-
-    public interface IPostFetch
-    {
-        void Begin();
-        void BeginPost(string Id, Author PostMan, string PostTime);
-        void NewText(string Text);
-        void NewLink(string Url, string Text);
-        void NewImage(string Url);
-        void EndPost(string Id, Author PostMan, string PostTime);
-        void End();
-    }
-
     public class Forum
     {
         public string Id;
@@ -101,7 +76,6 @@ namespace ForumClient.Api
             {
                 handler.AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate;
             }
-            handler.Proxy = new System.Net.WebProxy("http://192.168.10.148:1080/", true);
             handler.CookieContainer = this.cookies;
             handler.UseCookies = true;
             handler.AllowAutoRedirect = true;
@@ -381,9 +355,6 @@ namespace ForumClient.Api
                     {
                         var post_start = GetElement(child, config.post_start);
                         if (post_start == null) continue;
-
-                        Console.WriteLine("==================");
-                        PrintNode(0, post_start);
 
                         var post = new Post();
                         HtmlNode node;

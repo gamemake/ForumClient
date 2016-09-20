@@ -11,10 +11,25 @@ namespace ForumClient
         private System.Threading.Semaphore sem = new System.Threading.Semaphore(0, 2);
         private int sleep_time = 0;
         private bool quit_flag = false;
-        
-        public ThreadPage()
+
+        private Api.Thread threadInfo;
+        private int currentPage = 0;
+        private bool IsLoading = false;
+        private int totalNode = 0;
+        private int currentNode = 0;
+
+        public ThreadPage(Api.Thread info)
         {
+            threadInfo = info;
+
             InitializeComponent();
+            scrollView.Scrolled += OnScrolled;
+
+            content.Children.Add(new Label()
+            {
+                Text = threadInfo.Title,
+                FontAttributes = FontAttributes.Bold
+            });
         }
 
         protected override void OnDisappearing()
@@ -23,99 +38,116 @@ namespace ForumClient
             quit_flag = true;
         }
 
-        public void Update(Api.Thread tinfo)
+        public async void Fetch()
         {
-            content.Children.Add(new Label()
+            if (IsLoading) return;
+            IsLoading = true;
+
+            var start = DateTime.UtcNow;
+            var list = await App.GetClient().GetThread(threadInfo.Id, currentPage + 1);
+            if (list != null)
             {
-                Text = tinfo.Title,
-                FontAttributes = FontAttributes.Bold
-            });
-            
-            System.Threading.Tasks.Task.Run(() =>
+                Console.WriteLine("GetThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+                currentPage += 1;
+
+                totalNode = 0;
+                currentNode = 0;
+                foreach (var post in list)
+                {
+                    totalNode += post.Nodes.Count;
+                }
+                progressBar.Progress = 0;
+
+                System.Threading.Tasks.Task.Run(() =>
+                {
+                    UpdateInternal(list);
+                    IsLoading = false;
+                });
+            }
+            else
             {
-                UpdateInternal(tinfo.Id);
-            });
+                IsLoading = false;
+                await DisplayAlert("提示错误", "数据刷新失败", "确定");
+            }
         }
 
         private void WaitSignal()
         {
             sem.WaitOne();
+            // Console.WriteLine("execute time {0}", sleep_time);
+
+            sleep_time = sleep_time / 3;
+
             if (sleep_time > 0)
             {
                 System.Threading.Thread.Sleep(sleep_time);
             }
-            // Console.WriteLine("execute time {0}", sleep_time);
         }
 
-        private void OnSplitter()
+        private async System.Threading.Tasks.Task<ImageSource> GetImageSource(string url)
         {
-            var start = System.DateTime.UtcNow;
+#if false
+            var data = await App.GetClient().GetRawData(url, true);
+            return ImageSource.FromStream(() => new System.IO.MemoryStream(data));
+#else
+            System.Uri uri;
+            System.Uri.TryCreate(url, UriKind.Absolute, out uri);
+            return await System.Threading.Tasks.Task<ImageSource>.Factory.StartNew(() => ImageSource.FromUri(uri));
+#endif
+        }
+
+        private void BeginPost(Api.Post post)
+        {
             content.Children.Add(new BoxView()
             {
                 HeightRequest = 5,
                 Color = Color.Silver
             });
-            sleep_time = (int)((System.DateTime.UtcNow - start).Ticks / System.TimeSpan.TicksPerMillisecond);
-            sem.Release(1);
         }
 
-        private void OnText(string text)
+        private void UpdateNode(Api.PostNode node)
         {
             var start = System.DateTime.UtcNow;
-            content.Children.Add(new Label()
+
+            if (node.NodeType == "text")
             {
-                Text = text
-            });
-            sleep_time = (int)((System.DateTime.UtcNow - start).Ticks / System.TimeSpan.TicksPerMillisecond);
-            sem.Release(1);
-        }
-
-        private void OnLink(string text, string url)
-        {
-            var start = System.DateTime.UtcNow;
-            var link = new Label() { Text = text, LineBreakMode = LineBreakMode.TailTruncation, TextColor = Color.Blue, HorizontalOptions = LayoutOptions.Start };
-            link.GestureRecognizers.Add(new TapGestureRecognizer() { Command = new Command(() => { OpenLink(url); }) });
-            content.Children.Add(link);
-            sleep_time = (int)((start - System.DateTime.UtcNow).Ticks / System.TimeSpan.TicksPerMillisecond);
-            sem.Release(1);
-        }
-
-        private void OnImage(string url)
-        {
-            var start = System.DateTime.UtcNow;
-            var image = new Image();
-            content.Children.Add(image);
-            System.Threading.Tasks.Task.Run(async () =>
-            {
-                var client = (Application.Current as App).client;
-                var data = await client.GetRawData(url, true);
-                if(data!=null)
+                content.Children.Add(new Label()
                 {
-                    var source = ImageSource.FromStream(() => new System.IO.MemoryStream(data));
-                    Device.BeginInvokeOnMainThread(() =>
+                    Text = node.Text
+                });
+            }
+            else if (node.NodeType == "link")
+            {
+                var link = new Label() { Text = node.Text, LineBreakMode = LineBreakMode.TailTruncation, TextColor = Color.Blue, HorizontalOptions = LayoutOptions.Start };
+                link.GestureRecognizers.Add(new TapGestureRecognizer() { Command = new Command(() => { OpenLink(node.HRef); }) });
+                content.Children.Add(link);
+            }
+            else if (node.NodeType == "image")
+            {
+                var image = new Image();
+                content.Children.Add(image);
+                System.Threading.Tasks.Task.Run(async () =>
+                {
+                    var source = await GetImageSource(node.HRef);
+                    if (source != null)
                     {
-                        image.Source = source;
-                    });
-                }
-                /*
-                                System.Uri uri;
-                                System.Uri.TryCreate(url, UriKind.Absolute, out uri);
+                        Device.BeginInvokeOnMainThread(() =>
+                        {
+                            image.Source = source;
+                        });
+                    }
+                });
+            }
 
-                                var result = System.Threading.Tasks.Task<ImageSource>.Factory.StartNew(() => ImageSource.FromUri(uri));
-                                var source = await result;
-                                Device.BeginInvokeOnMainThread(() =>
-                                {
-                                    image.Source = source;
-                                });
-                */
-            });
+            currentNode += 1;
+            progressBar.Progress = (double)currentNode / (double)totalNode;
+
             sleep_time = (int)((System.DateTime.UtcNow - start).Ticks / System.TimeSpan.TicksPerMillisecond);
             sem.Release(1);
         }
 
-        private void OnPostInfo(Api.Post post)
+        private void EndPost(Api.Post post)
         {
-            var start = System.DateTime.UtcNow;
             var refen = new Label() { Text = " 引用 ", TextColor = Color.Blue, FontSize = 10, HorizontalOptions = LayoutOptions.End };
             refen.GestureRecognizers.Add(new TapGestureRecognizer() { Command = new Command(() => { PostReference(post.Id, "aa"); }) });
             var reply = new Label() { Text = " 回复 ", TextColor = Color.Blue, FontSize = 10, HorizontalOptions = LayoutOptions.End };
@@ -131,81 +163,34 @@ namespace ForumClient
                         refen, reply
                     }
             });
-            sleep_time = (int)((System.DateTime.UtcNow - start).Ticks / System.TimeSpan.TicksPerMillisecond);
-            sem.Release(1);
         }
 
-        public async void UpdateInternal(string tid)
+        private void UpdateInternal(List<Api.Post> list)
         {
-            try
+            foreach (var item in list)
             {
-                var c = (Application.Current as App).client;
-                var list = await c.GetThread(tid, 1);
+                if (quit_flag) return;
 
-                if (list == null)
+                var post = item;
+                Device.BeginInvokeOnMainThread(() =>
                 {
-                    Device.BeginInvokeOnMainThread( async () =>
-                    {
-                        await DisplayAlert("提示错误", "数据刷新失败", "确定");
-                    });
-                }
+                    BeginPost(post);
+                });
 
-                foreach (var item in list)
+                foreach (var node in item.Nodes)
                 {
-                    if (quit_flag) return;
-
+                    System.Threading.Thread.Sleep(10);
                     Device.BeginInvokeOnMainThread(() =>
                     {
-                        this.OnSplitter();
-                    });
-                    sem.WaitOne();
-
-                    foreach (var node in item.Nodes)
-                    {
-                        await System.Threading.Tasks.Task.Delay(10);
-
-                        if (node.NodeType == "text")
-                        {
-                            var text = node.Text;
-                            Device.BeginInvokeOnMainThread(() =>
-                            {
-                                this.OnText(text);
-                            });
-                            WaitSignal();
-                        }
-                        if (node.NodeType == "link")
-                        {
-                            var url = node.HRef;
-                            var text = node.Text;
-                            Device.BeginInvokeOnMainThread(() =>
-                            {
-                                this.OnLink(text, url);
-                            });
-                            WaitSignal();
-                        }
-                        if (node.NodeType == "image")
-                        {
-                            var url = node.HRef;
-                            Device.BeginInvokeOnMainThread(() =>
-                            {
-                                this.OnImage(url);
-                            });
-                            WaitSignal();
-                        }
-                    }
-
-                    var post = item;
-                    Device.BeginInvokeOnMainThread(() =>
-                    {
-                        this.OnPostInfo(post);
+                        UpdateNode(node);
                     });
                     WaitSignal();
                 }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Exception  : {0}", e.Message);
-                Console.WriteLine("StackTrace : {0}", e.StackTrace);
+
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    EndPost(post);
+                });
             }
         }
 
@@ -227,6 +212,13 @@ namespace ForumClient
         {
             await DisplayAlert("提示", "功能未实现", "确定");
         }
+
+        void OnScrolled(object Sender, ScrolledEventArgs e)
+        {
+            if (scrollView.ScrollY + scrollView.Height * 1.5 > scrollView.ContentSize.Height)
+            {
+                Fetch();
+            }
+        }
     }
 }
-

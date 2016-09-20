@@ -18,10 +18,10 @@ namespace ForumClient
         public FirstPage()
         {
             InitializeComponent();
-            forumList.RefreshCommand = new Command(PullToRefresh);
+            forumList.RefreshCommand = new Command(Fetch);
         }
 
-        async void OnForumSelected(object sender, SelectedItemChangedEventArgs e)
+        private async void OnForumSelected(object sender, SelectedItemChangedEventArgs e)
         {
             var item = e.SelectedItem as ForumMenuItem;
             if (item != null)
@@ -29,77 +29,56 @@ namespace ForumClient
                 forumList.SelectedItem = null;
 
                 var navPage = Parent as NavigationPage;
-                var page = new ForumPage();
+                var page = new ForumPage(item.SubID);
                 await navPage.Navigation.PushAsync(page);
-                page.Fetch(item.SubID, 1);
+                page.Fetch();
             }
         }
 
-        bool IsLoading = false;
+        private bool IsLoading = false;
+
+        private void Update(List<Api.Forum> list)
+        {
+            var start = DateTime.UtcNow;
+
+            var forumData = new ObservableCollection<ForumMenuItem>();
+            foreach (var item in list)
+            {
+                forumData.Add(new ForumMenuItem() { Title = item.Name, Description = item.Desc, SubID = item.Id });
+            }
+
+            start = DateTime.UtcNow;
+            forumList.ItemsSource = forumData;
+            Console.WriteLine("UpdateForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+        }
 
         public async void Fetch()
         {
             if (IsLoading) return;
-            IsLoading = true;
 
-            var c = (Application.Current as App).client;
-            forumList.BeginRefresh();
+            IsLoading = true;
+            if(!forumList.IsRefreshing)
+                forumList.BeginRefresh();
 
             var start = DateTime.UtcNow;
-            var list = await c.GetForumList();
-            Console.WriteLine("GetForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+            var list = await App.GetClient().GetForumList();
+            if (list != null)
+            {
+                Console.WriteLine("GetForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+                Update(list);
+            }
+            else
+            {
+                forumList.ItemsSource = new ObservableCollection<ForumMenuItem>();
+            }
+
+            forumList.EndRefresh();
+            IsLoading = false;
 
             if (list == null)
             {
                 await DisplayAlert("提示错误", "数据刷新失败", "确定");
             }
-            else
-            {
-                var forumListData = new ObservableCollection<ForumMenuItem>();
-                foreach (var item in list)
-                {
-                    forumListData.Add(new ForumMenuItem() { Title = item.Name, Description = item.Desc, SubID = item.Id });
-                }
-
-                start = DateTime.UtcNow;
-                forumList.ItemsSource = forumListData;
-                Console.WriteLine("UpdateForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
-            }
-
-            forumList.EndRefresh();
-            IsLoading = false;
-        }
-
-        public async void PullToRefresh()
-        {
-            if (IsLoading) return;
-            IsLoading = true;
-
-            var c = (Application.Current as App).client;
-
-            var start = DateTime.UtcNow;
-            var list = await c.GetForumList();
-            Console.WriteLine("GetForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
-
-            if (list == null)
-            {
-                await DisplayAlert("提示错误", "数据刷新失败", "确定");
-            }
-            else
-            {
-                var forumListData = new ObservableCollection<ForumMenuItem>();
-                foreach (var item in list)
-                {
-                    forumListData.Add(new ForumMenuItem() { Title = item.Name, Description = item.Desc, SubID = item.Id });
-                }
-
-                start = DateTime.UtcNow;
-                forumList.ItemsSource = forumListData;
-                Console.WriteLine("UpdateForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
-            }
-
-            forumList.EndRefresh();
-            IsLoading = false;
         }
     }
 }
