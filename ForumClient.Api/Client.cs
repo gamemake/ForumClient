@@ -174,33 +174,28 @@ namespace ForumClient.Api
 
         public async Task<bool> SignOut()
         {
-            bool result = true;
             try
             {
-                using (var resp = await client.GetAsync(config.logout_url))
-                {
-                    await resp.Content.ReadAsByteArrayAsync();
-                }
+                await GetHtmlDocument(config.logout_url, false);
+                return true;
             }
             catch (Exception e)
             {
-                result = false;
                 Console.WriteLine("Exception  : {0}", e.Message);
                 Console.WriteLine("StackTrace : {0}", e.StackTrace);
             }
-            return result;
+            return false;
         }
 
         public async Task<List<Forum>> GetForumList()
         {
-            var forums = new List<Forum>();
             try
             {
-                using (var resp = await client.GetAsync(config.forumlist_url))
+                var doc = await GetHtmlDocument(config.forumlist_url, true);
+                if (doc != null)
                 {
-                    var data = await resp.Content.ReadAsByteArrayAsync();
-                    var doc = new HtmlDocument();
-                    doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding(config.text_encoder));
+                    var start = DateTime.UtcNow;
+                    var forums = new List<Forum>();
 
                     var forum_root = GetElement(doc.DocumentNode, config.forum_root, 0);
                     if (forum_root != null)
@@ -228,39 +223,41 @@ namespace ForumClient.Api
 
                                 node = GetElement(forum_start, config.forum_title, 0);
                                 if (node == null) continue;
-                                forum.Name = node.InnerText;
+                                forum.Name = HtmlEntity.DeEntitize(node.InnerText);
 
                                 node = GetElement(forum_start, config.forum_desc, 0);
                                 if (node == null) continue;
-                                forum.Desc = node.InnerText;
+                                forum.Desc = HtmlEntity.DeEntitize(node.InnerText);
 
                                 forums.Add(forum);
                             }
                         }
                     }
+
+                    Console.WriteLine("ParseForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+                    return forums;
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine("Exception  : {0}", e.Message);
                 Console.WriteLine("StackTrace : {0}", e.StackTrace);
-                return null;
             }
-            return forums;
+
+            Console.WriteLine("ParseForumList failed");
+            return null;
         }
 
         public async Task<List<Thread>> GetForum(string fid, int page)
         {
-            var threads = new List<Thread>();
             try
             {
                 var url = string.Format(config.threadlist_url, fid, page);
-                using (var resp = await client.GetAsync(url))
+                var doc = await GetHtmlDocument(url, true);
+                if (doc != null)
                 {
-                    var data = await resp.Content.ReadAsByteArrayAsync();
-
-                    var doc = new HtmlDocument();
-                    doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding(config.text_encoder));
+                    var start = DateTime.UtcNow;
+                    var threads = new List<Thread>();
 
                     var thread_root = GetElement(doc.DocumentNode, config.thread_root, 0);
                     if (thread_root != null)
@@ -300,7 +297,7 @@ namespace ForumClient.Api
 
                             node = GetElement(thread_start, config.thread_post_auth_name, 0);
                             if (node == null) continue;
-                            thread.Author.Name = node.InnerText;
+                            thread.Author.Name = HtmlEntity.DeEntitize(node.InnerText);
 
                             node = GetElement(thread_start, config.thread_post_auth_id, 0);
                             if (node == null) continue;
@@ -312,7 +309,7 @@ namespace ForumClient.Api
 
                             node = GetElement(thread_start, config.thread_last_auth_name, 0);
                             if (node != null)
-                                thread.Last_Author.Name = node.InnerText;
+                                thread.Last_Author.Name = HtmlEntity.DeEntitize(node.InnerText);
 
                             node = GetElement(thread_start, config.thread_last_auth_id, 0);
                             if (node != null)
@@ -325,30 +322,32 @@ namespace ForumClient.Api
                             threads.Add(thread);
                         }
                     }
+
+                    Console.WriteLine("ParseThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+                    return threads;
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine("Exception  : {0}", e.Message);
                 Console.WriteLine("StackTrace : {0}", e.StackTrace);
-                return null;
             }
-            return threads;
+
+            Console.WriteLine("ParseThreadList failed");
+            return null;
         }
 
         public async Task<List<Post>> GetThread(string tid, int page, PageEndNotify notify = null)
         {
-            var retval = new List<Post>();
             try
             {
                 var url = string.Format(config.postlist_url, tid, page);
                 var doc = await GetHtmlDocument(url, true);
-                if (doc == null)
+                if (doc != null)
                 {
-                    return null;
-                }
-                else
-                {
+                    var start = DateTime.UtcNow;
+                    var retval = new List<Post>();
+                    
                     var post_root = GetElement(doc.DocumentNode, config.post_root, 0);
                     foreach (var child in post_root.ChildNodes)
                     {
@@ -426,19 +425,19 @@ namespace ForumClient.Api
                         }
                     }
 
-                    if (last_page)
-                    {
-                        notify();
-                    }
+                    Console.WriteLine("ParsePostList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+                    if (last_page) notify();
+                    return retval;
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine("Exception  : {0}", e.Message);
                 Console.WriteLine("StackTrace : {0}", e.StackTrace);
-                return null;
             }
-            return retval;
+
+            Console.WriteLine("ParsePostList failed");
+            return null;
         }
 
         string GetAttributeValue(HtmlNode basenode, string name)
@@ -554,10 +553,7 @@ namespace ForumClient.Api
         {
             if (basenode.NodeType == HtmlNodeType.Text)
             {
-                var text = basenode.OuterHtml;
-                text = text.Replace("\n", "");
-                text = text.Replace("\r", "");
-                text = text.Trim();
+                var text = HtmlEntity.DeEntitize(basenode.InnerText).Trim();
                 if (text.Length > 0)
                 {
                     builder.Append(text);
@@ -667,16 +663,23 @@ namespace ForumClient.Api
 
         public async System.Threading.Tasks.Task<HtmlDocument> GetHtmlDocument(string url, bool redirect)
         {
-            HtmlDocument doc = null;
             try
             {
-                do
+                HtmlDocument doc = null;
+                var start = System.DateTime.UtcNow;
+                double html_time = 0;
+
+                for (; redirect; )
                 {
                     using (var resp = await client.GetAsync(url))
                     {
                         var data = await resp.Content.ReadAsByteArrayAsync();
+
+                        var html_start = DateTime.UtcNow;
                         doc = new HtmlDocument();
                         doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding(config.text_encoder));
+                        html_time += (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond;
+
                         if (redirect)
                         {
                             var config_root = new List<Api.ConfigItem>();
@@ -711,13 +714,17 @@ namespace ForumClient.Api
                             }
                         }
                     }
-                } while (redirect);
+                }
+
+                Console.WriteLine("ParseHtmlDocument {0}", html_time);
+                Console.WriteLine("GetHtmlDocument {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+return doc;
             }
             catch (Exception)
             {
-                doc = null;
+                Console.WriteLine("GetHtmlDocument failed");
             }
-            return doc;
+            return null;
         }
     }
 }

@@ -44,11 +44,9 @@ namespace ForumClient
             if (IsLoading) return;
             IsLoading = true;
 
-            var start = DateTime.UtcNow;
             var list = await App.GetClient().GetThread(threadInfo.Id, currentPage + 1, () => { lastPage = true; });
             if (list != null)
             {
-                Console.WriteLine("GetThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
                 currentPage += 1;
 
                 totalNode = 0;

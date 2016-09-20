@@ -60,11 +60,9 @@ namespace ForumClient
             if(!forumList.IsRefreshing)
                 forumList.BeginRefresh();
 
-            var start = DateTime.UtcNow;
             var list = await App.GetClient().GetForumList();
             if (list != null)
             {
-                Console.WriteLine("GetForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
                 Update(list);
             }
             else

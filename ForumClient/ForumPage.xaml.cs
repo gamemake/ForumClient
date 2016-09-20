@@ -121,11 +121,9 @@ namespace ForumClient
                 tidSet.Clear();
             }
 
-            var start = DateTime.UtcNow;
             var list = await App.GetClient().GetForum(currentForumId, currentPage + 1);
             if (list != null)
             {
-                Console.WriteLine("GetThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
                 currentPage += 1;
                 Update(list, refresh);
             }
