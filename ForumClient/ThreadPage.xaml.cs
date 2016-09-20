@@ -141,7 +141,14 @@ namespace ForumClient
             }
 
             currentNode += 1;
-            progressBar.Progress = (double)currentNode / (double)totalNode;
+            if (currentPage < totalNode)
+            {
+                progressBar.Progress = (double)currentNode / (double)totalNode;
+            }
+            else
+            {
+                progressBar.Progress = 0;
+            }
 
             sleep_time = (int)((System.DateTime.UtcNow - start).Ticks / System.TimeSpan.TicksPerMillisecond);
             sem.Release(1);

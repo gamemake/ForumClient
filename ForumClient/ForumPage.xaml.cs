@@ -111,7 +111,7 @@ namespace ForumClient
             if (IsLoading) return;
 
             IsLoading = true;
-            if(!threadList.IsRefreshing)
+            if(!threadList.IsRefreshing && currentPage > 0)
                 threadList.BeginRefresh();
 
             if (refresh)
@@ -130,7 +130,8 @@ namespace ForumClient
                 Update(list, refresh);
             }
 
-            threadList.EndRefresh();
+            if(threadList.IsRefreshing)
+                threadList.EndRefresh();
             IsLoading = false;
 
             if (list == null)

@@ -267,10 +267,7 @@ namespace ForumClient.Api
                     {
                         foreach (var child in thread_root.ChildNodes)
                         {
-                            var thread_start = GetElement(child, config.thread_start);
-                            if (thread_start == null) continue;
-
-                            if (GetElement(child, config.thread_default, 0) != null)
+                            if (GetElement(child, config.thread_default) != null)
                             {
                                 for (int i = 0; i < threads.Count; i++)
                                 {
@@ -279,8 +276,8 @@ namespace ForumClient.Api
                                 continue;
                             }
 
-                            // Console.WriteLine("=========================================================================================");
-                            // PrintNode(0, thread_start);
+                            var thread_start = GetElement(child, config.thread_start);
+                            if (thread_start == null) continue;
 
                             var thread = new Thread();
                             HtmlNode node;
@@ -462,11 +459,11 @@ namespace ForumClient.Api
             {
                 if (pair.Key == "name")
                 {
-                    if (pair.Value != node.Name) return false;
+                    if (string.Compare(pair.Value, node.Name, true) != 0) return false;
                 }
-                else if (pair.Key == "inner_html")
+                else if (pair.Key == "inner_text")
                 {
-                    if (node.InnerHtml != pair.Value) return false;
+                    if (node.InnerText != pair.Value) return false;
                 }
                 else
                 {
@@ -638,18 +635,13 @@ namespace ForumClient.Api
 
             if (basenode.NodeType == HtmlNodeType.Text)
             {
-                var text = basenode.InnerText;
-                text = text.Replace("\r", "");
-                text = text.Replace("\n", "");
-                if (text.IndexOf("nbsp", StringComparison.CurrentCulture) >= 0)
-                {
-                    text = text.Replace("&nbsp;", " ");
-                }
-                text = text.Replace("&nbsp;", " ");
+
+                var text = HtmlEntity.DeEntitize(basenode.InnerText);
                 text = text.Trim();
                 if (text.Length > 0)
                 {
-                    var lines = basenode.InnerText.Split(new char['\n']);
+                    /*
+                    var lines = text.Split(new char['\n']);
                     bool first = true;
                     var builder = new System.Text.StringBuilder();
                     foreach (var line in lines)
@@ -658,10 +650,11 @@ namespace ForumClient.Api
                         first = false;
                         builder.Append(line.Trim());
                     }
+                    */
                     nodes.Add(new PostNode()
                     {
                         NodeType = "text",
-                        Text = builder.ToString()
+                        Text = text
                     });
                 }
             }

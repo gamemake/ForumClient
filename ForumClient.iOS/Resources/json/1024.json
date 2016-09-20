@@ -45,12 +45,12 @@
 			{ "name" : "table" },
 			{ "name" : "tbody", "style": "table-layout:fixed;" }
 		],
+		"thread_default" : [
+			{ "name" : "tr", "class": "tr2" },
+			{ "name" : "td", "inner_text": "普通主題" }
+		],
 		"thread_start" : [
 			{ "name" : "tr", "align": "center" }
-		],
-		"thread_default" : [
-			{ "name" : "tr" },
-			{ "name" : "th", "class": "subject" }
 		],
 		"thread_id" : [
 			{ "name" : "td", "style": "text-align:left;padding-left:8px" },
@@ -102,7 +102,7 @@
 			{ "name" : "th", "height": "100%" },
 			{ },
 			{ "name" : "div", "class": "tiptop" },
-			{ "name" : "a", "inner_html": "引用" }
+			{ "name" : "a", "inner_text": "引用" }
 		],
 		"post_auth_name" : [
 			{ "name" : "tr" },
@@ -133,7 +133,8 @@
 			{ "name" : "td", "class": "t_msgfont" }
 		],
 		"content_ignore" : [
-			{ "name" : "div", "class": "tiptop" }
+			{ "name" : "div", "class": "tiptop" },
+			{ "name" : "script" }
 		],
 		"pages_start" : [
 			{ "name" : "html" },

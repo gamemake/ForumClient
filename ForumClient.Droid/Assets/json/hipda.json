@@ -53,13 +53,14 @@
 			{ "name" : "div", "id": "threadlist" },
 			{ "name" : "table" }
 		],
+		"thread_default" : [
+			{ "name" : "tbody" },
+			{ "name" : "tr" },
+			{ "name" : "th", "class": "subject" }
+		],
 		"thread_start" : [
 			{ "name" : "tbody" },
 			{ "name" : "tr" }
-		],
-		"thread_default" : [
-			{ "name" : "tr" },
-			{ "name" : "th", "class": "subject" }
 		],
 		"thread_id" : [
 			{ "name" : "th" },
