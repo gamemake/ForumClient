@@ -8,6 +8,7 @@ ForumClient.Console/bin
 ForumClient.Console/obj
 packages
 .vs
+.vscode
 !packages/repositories.config
 *.userprefs
 

@@ -19,12 +19,10 @@ namespace ForumClient.Api
         public bool OnTop = false;
         public string Id;
         public string Title;
-        public Author Author = new Author();
+        public string PostAuthor;
         public string PostTime;
-        public Author Last_Author = new Author();
-        public string Last_PostTime;
-        public int ReplyCount;
-        public int ViewCount;
+        public string LastAuthor;
+        public string LastTime;
     }
 
     public class PostNode
@@ -37,16 +35,9 @@ namespace ForumClient.Api
     public class Post
     {
         public string Id;
-        public Author Author = new Author();
-        public string Content;
+        public string PostAuthor;
         public string PostTime;
-        public List<PostNode> Nodes = new List<PostNode>();
-    }
-
-    public class Author
-    {
-        public string Id;
-        public string Name;
+        public List<PostNode> Content = new List<PostNode>();
     }
 
     public class Client
@@ -82,7 +73,7 @@ namespace ForumClient.Api
             handler.UseCookies = true;
             handler.AllowAutoRedirect = true;
             client = new HttpClient(handler);
-            client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36");
+            client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", config.user_agent);
 
             client.BaseAddress = new Uri(this.config.base_url);
         }
@@ -194,43 +185,28 @@ namespace ForumClient.Api
                 var doc = await GetHtmlDocument(config.forumlist_url, true);
                 if (doc != null)
                 {
-                    var start = DateTime.UtcNow;
                     var forums = new List<Forum>();
+                    var start = DateTime.UtcNow;
 
-                    var forum_root = GetElement(doc.DocumentNode, config.forum_root, 0);
-                    if (forum_root != null)
+                    var nodes = doc.DocumentNode.SelectNodes(config.forum_node);
+                    foreach (var node in nodes)
                     {
-                        foreach (var child1 in forum_root.ChildNodes)
+                        var id = GetStringByXPath(node, config.forum_id);
+                        var name = node.SelectSingleNode(config.forum_name);
+                        var desc = node.SelectSingleNode(config.forum_desc);
+
+                        if (id == "" || name == null || desc == null)
                         {
-                            if (child1.NodeType != HtmlNodeType.Element) continue;
-
-                            var forum_category = GetElement(child1, config.forum_category);
-                            if (forum_category == null) continue;
-
-                            foreach (var child in forum_category.ChildNodes)
+                            Console.WriteLine("error in parse forum node : id == null || name == null || desc == null");
+                        }
+                        else
+                        {
+                            forums.Add(new Api.Forum()
                             {
-                                if (child.NodeType != HtmlNodeType.Element) continue;
-
-                                var forum_start = GetElement(child, config.forum_start);
-                                if (forum_start == null) continue;
-
-                                var forum = new Forum();
-                                HtmlNode node;
-
-                                node = GetElement(forum_start, config.forum_id, 0);
-                                if (node == null) continue;
-                                forum.Id = GetUrlString(GetAttributeValue(node, "href"), "fid=", "&");
-
-                                node = GetElement(forum_start, config.forum_title, 0);
-                                if (node == null) continue;
-                                forum.Name = HtmlEntity.DeEntitize(node.InnerText);
-
-                                node = GetElement(forum_start, config.forum_desc, 0);
-                                if (node == null) continue;
-                                forum.Desc = HtmlEntity.DeEntitize(node.InnerText);
-
-                                forums.Add(forum);
-                            }
+                                Id = GetUrlString(id, "fid=", "&"),
+                                Name = HtmlEntity.DeEntitize(name.InnerText),
+                                Desc = HtmlEntity.DeEntitize(desc.InnerText)
+                            });
                         }
                     }
 
@@ -259,68 +235,32 @@ namespace ForumClient.Api
                     var start = DateTime.UtcNow;
                     var threads = new List<Thread>();
 
-                    var thread_root = GetElement(doc.DocumentNode, config.thread_root, 0);
-                    if (thread_root != null)
+                    var nodes = doc.DocumentNode.SelectNodes(config.thread_node);
+                    foreach (var node in nodes)
                     {
-                        foreach (var child in thread_root.ChildNodes)
+                        var ontop = node.SelectSingleNode(config.thread_ontop);
+                        var id = FixThreadId(GetStringByXPath(node, config.thread_id));
+                        var title = GetStringByXPath(node, config.thread_title);
+                        var post_author = node.SelectSingleNode(config.thread_post_author);
+                        var post_time = node.SelectSingleNode(config.thread_post_time);
+                        var last_author = node.SelectSingleNode(config.thread_last_author);
+                        var last_time = node.SelectSingleNode(config.thread_last_time);
+
+                        if (id == "" || title == "")
                         {
-                            if (GetElement(child, config.thread_default) != null)
-                            {
-                                for (int i = 0; i < threads.Count; i++)
-                                {
-                                    threads[i].OnTop = true;
-                                }
-                                continue;
-                            }
-
-                            var thread_start = GetElement(child, config.thread_start);
-                            if (thread_start == null) continue;
-
-                            var thread = new Thread();
-                            HtmlNode node;
-
-                            node = GetElement(thread_start, config.thread_id, 0);
-                            if (node == null) continue;
-                            thread.Id = GetUrlString(GetAttributeValue(node, "href"), "tid=", "&");
-                            if (thread.Id.LastIndexOf('/') > 0)
-                            {
-                                thread.Id = thread.Id.Substring(thread.Id.LastIndexOf('/') + 1);
-                            }
-                            if (thread.Id.IndexOf('.') > 0)
-                            {
-                                thread.Id = thread.Id.Substring(0, thread.Id.LastIndexOf('.'));
-                            }
-
-                            node = GetElement(thread_start, config.thread_title, 0);
-                            if (node == null) continue;
-                            thread.Title = GetHtmlNodeText(node);
-
-                            node = GetElement(thread_start, config.thread_post_auth_name, 0);
-                            if (node == null) continue;
-                            thread.Author.Name = HtmlEntity.DeEntitize(node.InnerText);
-
-                            node = GetElement(thread_start, config.thread_post_auth_id, 0);
-                            if (node == null) continue;
-                            thread.Author.Id = GetUrlString(GetAttributeValue(node, "href"), "uid=", "&");
-
-                            node = GetElement(thread_start, config.thread_post_time, 0);
-                            if (node == null) continue;
-                            thread.PostTime = node.InnerText;
-
-                            node = GetElement(thread_start, config.thread_last_auth_name, 0);
-                            if (node != null)
-                                thread.Last_Author.Name = HtmlEntity.DeEntitize(node.InnerText);
-
-                            node = GetElement(thread_start, config.thread_last_auth_id, 0);
-                            if (node != null)
-                                thread.Last_Author.Id = GetUrlString(GetAttributeValue(node, "href"), "username=", "&");
-
-                            node = GetElement(thread_start, config.thread_last_time, 0);
-                            if (node != null)
-                                thread.Last_PostTime = node.InnerText;
-
-                            threads.Add(thread);
+                            Console.WriteLine("error in parse thrad node : id == null || title == null");
                         }
+
+                        threads.Add(new Api.Thread()
+                        {
+                            OnTop = ontop != null,
+                            Id = GetUrlString(GetUrlString(id, "tid=", "&"), "/", "."),
+                            Title = HtmlEntity.DeEntitize(title),
+                            PostAuthor = post_author != null ? HtmlEntity.DeEntitize(post_author.InnerText) : "",
+                            PostTime = post_time != null ? FixTimeString(HtmlEntity.DeEntitize(post_time.InnerText)) : "",
+                            LastAuthor = last_author != null ? HtmlEntity.DeEntitize(last_author.InnerText) : "",
+                            LastTime = last_time != null ? FixTimeString(HtmlEntity.DeEntitize(last_time.InnerText)) : ""
+                        });
                     }
 
                     Console.WriteLine("ParseThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
@@ -346,88 +286,47 @@ namespace ForumClient.Api
                 if (doc != null)
                 {
                     var start = DateTime.UtcNow;
-                    var retval = new List<Post>();
-                    
-                    var post_root = GetElement(doc.DocumentNode, config.post_root, 0);
-                    foreach (var child in post_root.ChildNodes)
+                    var posts = new List<Post>();
+
+                    var nodes = doc.DocumentNode.SelectNodes(config.post_node);
+                    foreach (var node in nodes)
                     {
-                        var post_start = GetElement(child, config.post_start);
-                        if (post_start == null) continue;
+                        var id = GetStringByXPath(node, config.post_id);
+                        var author = node.SelectSingleNode(config.post_author);
+                        var time = node.SelectSingleNode(config.post_time);
+                        var content = node.SelectSingleNode(config.post_content);
 
-                        var post = new Post();
-                        HtmlNode node;
-
-                        node = GetElement(post_start, config.post_id, 0);
-                        if (node == null)
-                            continue;
-                        post.Id = GetAttributeValue(node, "href");
-                        post.Id = GetUrlString(post.Id, "pid=", "&");
-
-                        node = GetElement(post_start, config.post_auth_name, 0);
-                        if (node == null)
-                            continue;
-                        post.Author.Name = node.InnerText;
-
-                        if (config.post_auth_id.Count > 0)
+                        if (id == "" || content == null)
                         {
-                            node = GetElement(post_start, config.post_auth_id, 0);
-                            if (node == null) continue;
-                            post.Author.Name = GetUrlString(GetAttributeValue(node, "href"), "uid=", "&");
-                        }
-                        else
-                        {
-                            post.Author.Id = "";
+                            Console.WriteLine("error in parse thrad node : id == null || title == null");
                         }
 
-                        node = GetElement(post_start, config.post_time, 0);
-                        if (node == null)
-                            continue;
-                        post.PostTime = node.InnerText;
-                        if (config.post_time_left.Length > 0 && post.PostTime.LastIndexOf(config.post_time_left) >= 0)
-                        {
-                            post.PostTime = post.PostTime.Substring(post.PostTime.LastIndexOf(config.post_time_left) + config.post_time_left.Length);
-                        }
-                        if (config.post_time_right.Length > 0 && post.PostTime.LastIndexOf(config.post_time_right) >= 0)
-                        {
-                            post.PostTime = post.PostTime.Substring(0, post.PostTime.LastIndexOf(config.post_time_right));
-                        }
+                        var list = new List<Api.PostNode>();
+                        RemoveNodes(content);
+                        ParseHtmlNode(list, content);
 
-                        node = GetElement(post_start, config.post_content_1, 0);
-                        if (node == null)
+                        posts.Add(new Api.Post()
                         {
-                            node = GetElement(post_start, config.post_content_2, 0);
-                            if (node == null) continue;
-                        }
-                        ParseHtmlNode(post.Nodes, node);
-
-                        retval.Add(post);
+                            Id = GetUrlString(id, "pid=", "&"),
+                            PostAuthor = author != null ? HtmlEntity.DeEntitize(author.InnerText) : "",
+                            PostTime = time != null ? FixTimeString(HtmlEntity.DeEntitize(time.InnerText)) : "",
+                            Content = list
+                        });
                     }
 
                     var last_page = true;
-                    var pages_start = GetElement(doc.DocumentNode, config.post_pages_start, 0);
-                    if (pages_start != null)
+                    if (!string.IsNullOrWhiteSpace(config.post_page_end))
                     {
-                        if (config.post_pages_end.Count > 0)
-                        {
-                            last_page = false;
-                            if (GetElement(pages_start, config.post_pages_end, 0) != null)
-                            {
-                                last_page = true;
-                            }
-                        }
-                        if (config.post_pages_next.Count > 0)
-                        {
-                            last_page = true;
-                            if (GetElement(pages_start, config.post_pages_next, 0) != null)
-                            {
-                                last_page = false;
-                            }
-                        }
+                        last_page = doc.DocumentNode.SelectSingleNode(config.post_page_end) != null;
+                    }
+                    if (!string.IsNullOrWhiteSpace(config.post_page_next))
+                    {
+                        last_page = doc.DocumentNode.SelectSingleNode(config.post_page_next) != null;
                     }
 
                     Console.WriteLine("ParsePostList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
                     if (last_page) notify();
-                    return retval;
+                    return posts;
                 }
             }
             catch (Exception e)
@@ -440,66 +339,80 @@ namespace ForumClient.Api
             return null;
         }
 
-        string GetAttributeValue(HtmlNode basenode, string name)
+        public async System.Threading.Tasks.Task<HtmlDocument> GetHtmlDocument(string url, bool redirect)
         {
-            foreach (var attr in basenode.ChildAttributes(name))
+            try
             {
-                if (attr.Name == name)
-                    return attr.Value;
+                HtmlDocument doc = null;
+                var start = System.DateTime.UtcNow;
+                double html_time = 0;
+
+                for (; redirect;)
+                {
+                    using (var resp = await client.GetAsync(url))
+                    {
+                        var data = await resp.Content.ReadAsByteArrayAsync();
+
+                        var html_start = DateTime.UtcNow;
+                        doc = new HtmlDocument();
+                        doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding(config.text_encoder));
+                        html_time += (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond;
+
+                        if (redirect)
+                        {
+                            var node = doc.DocumentNode.SelectSingleNode("/html/head/meta[@http-equiv='refresh']/@content");
+                            if (node != null)
+                            {
+                                url = GetUrlString(node.ToString(), "=", "\n");
+                            }
+                            else
+                            {
+                                redirect = false;
+                            }
+                        }
+                    }
+                }
+
+                Console.WriteLine("ParseHtmlDocument {0}", html_time);
+                Console.WriteLine("GetHtmlDocument {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+                return doc;
             }
-            return "";
-        }
-
-
-        bool CheckElement(HtmlNode node, ConfigItem item)
-        {
-            if (node.NodeType != HtmlNodeType.Element) return false;
-            foreach (var pair in item)
+            catch (Exception)
             {
-                if (pair.Key == "name")
-                {
-                    if (string.Compare(pair.Value, node.Name, true) != 0) return false;
-                }
-                else if (pair.Key == "inner_text")
-                {
-                    if (node.InnerText != pair.Value) return false;
-                }
-                else
-                {
-                    if (pair.Value != GetAttributeValue(node, pair.Key) && (pair.Value != "*" || GetAttributeValue(node, pair.Key) == "")) return false;
-                }
-            }
-            return true;
-        }
-
-        HtmlNode GetElement(HtmlNode root, List<ConfigItem> list)
-        {
-            if (!CheckElement(root, list[0])) return null;
-            return GetElement(root, list, 1);
-        }
-
-        HtmlNode GetElement(HtmlNode root, List<ConfigItem> list, int index)
-        {
-            if (index == list.Count) return root;
-
-            foreach (var node in root.ChildNodes)
-            {
-                HtmlNode retval;
-                if (list[index].Count > 0)
-                {
-                    if (!CheckElement(node, list[index])) continue;
-                }
-                else
-                {
-                    retval = GetElement(root, list, index + 1);
-                    if (retval != null) return retval;
-                    retval = GetElement(node, list, index);
-                    if (retval != null) return retval;
-                }
-                retval = GetElement(node, list, index + 1);
-                if (retval != null) return retval;
+                Console.WriteLine("GetHtmlDocument failed");
             }
             return null;
+        }
+
+        string GetStringByXPath(HtmlNode basenode, string path)
+        {
+            var node = basenode.SelectSingleNode(path);
+            if (node == null) return "";
+            var pos = path.LastIndexOf('/');
+            if (pos > 0)
+            {
+                if (path.Substring(pos + 1).StartsWith("@"))
+                {
+                    return GetAttributeValue(node, path.Substring(pos + 2));
+                }
+            }
+            return HtmlEntity.DeEntitize(node.InnerText);
+        }
+
+        string FixTimeString(string time)
+        {
+            int start, end;
+            for (start = 0; start < time.Length && !Char.IsDigit(time[start]); start++) { }
+            for (end = time.Length - 1; end > start && !Char.IsDigit(time[end]); end--) { }
+            return time.Substring(start, end - start);
+        }
+
+        string FixThreadId(string value)
+        {
+            int end, start;
+            for (end = value.Length - 1; end > 0 && !Char.IsDigit(value[end]); end--) { }
+            for (start = end; start >0 && Char.IsDigit(value[start-1]); start--) { }
+            return value.Substring(start, end - start);
         }
 
         string GetUrlString(string url, string start, string end)
@@ -549,42 +462,32 @@ namespace ForumClient.Api
             return sb.ToString();
         }
 
-        void GetHtmlNodeText(System.Text.StringBuilder builder, HtmlNode basenode)
+        string GetAttributeValue(HtmlNode basenode, string name)
         {
-            if (basenode.NodeType == HtmlNodeType.Text)
+            foreach (var attr in basenode.ChildAttributes(name))
             {
-                var text = HtmlEntity.DeEntitize(basenode.InnerText).Trim();
-                if (text.Length > 0)
-                {
-                    builder.Append(text);
-                }
+                if (attr.Name == name)
+                    return attr.Value;
             }
-
-            foreach (var node in basenode.ChildNodes)
-            {
-                GetHtmlNodeText(builder, node);
-            }
+            return "";
         }
 
-        string GetHtmlNodeText(HtmlNode basenode)
+        void RemoveNodes(HtmlNode basenode)
         {
-            var builder = new System.Text.StringBuilder();
-            GetHtmlNodeText(builder, basenode);
-            return builder.ToString();
+            var nodes = basenode.SelectNodes(config.post_ignore);
+            if (nodes != null)
+            {
+                foreach (var node in nodes)
+                {
+                    node.Remove();
+                }
+            }
         }
 
         void ParseHtmlNode(List<PostNode> nodes, HtmlNode basenode)
         {
             if (basenode.NodeType == HtmlNodeType.Element)
             {
-                foreach (var c in config.post_content_ignore)
-                {
-                    if (CheckElement(basenode, c))
-                    {
-                        return;
-                    }
-                }
-
                 if (basenode.Name == "a")
                 {
                     var href = GetAttributeValue(basenode, "href");
@@ -636,17 +539,6 @@ namespace ForumClient.Api
                 text = text.Trim();
                 if (text.Length > 0)
                 {
-                    /*
-                    var lines = text.Split(new char['\n']);
-                    bool first = true;
-                    var builder = new System.Text.StringBuilder();
-                    foreach (var line in lines)
-                    {
-                        if (!first) builder.Append(" ");
-                        first = false;
-                        builder.Append(line.Trim());
-                    }
-                    */
                     nodes.Add(new PostNode()
                     {
                         NodeType = "text",
@@ -661,70 +553,5 @@ namespace ForumClient.Api
             }
         }
 
-        public async System.Threading.Tasks.Task<HtmlDocument> GetHtmlDocument(string url, bool redirect)
-        {
-            try
-            {
-                HtmlDocument doc = null;
-                var start = System.DateTime.UtcNow;
-                double html_time = 0;
-
-                for (; redirect; )
-                {
-                    using (var resp = await client.GetAsync(url))
-                    {
-                        var data = await resp.Content.ReadAsByteArrayAsync();
-
-                        var html_start = DateTime.UtcNow;
-                        doc = new HtmlDocument();
-                        doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding(config.text_encoder));
-                        html_time += (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond;
-
-                        if (redirect)
-                        {
-                            var config_root = new List<Api.ConfigItem>();
-                            var config_item = new Api.ConfigItem();
-                            config_item.Add("name", "html");
-                            config_root.Add(config_item);
-                            config_item = new Api.ConfigItem();
-                            config_item.Add("name", "head");
-                            config_root.Add(config_item);
-                            var head = GetElement(doc.DocumentNode, config_root, 0);
-                            redirect = false;
-                            if (head != null)
-                            {
-                                foreach (var meta in head.ChildNodes)
-                                {
-                                    if (meta.Name == "meta")
-                                    {
-                                        if (GetAttributeValue(meta, "http-equiv") == "refresh")
-                                        {
-                                            var rurl = GetAttributeValue(meta, "content");
-                                            var index = rurl.IndexOf('=');
-                                            if (index >= 0)
-                                            {
-                                                rurl = rurl.Substring(index + 1).Trim();
-                                                url = rurl;
-                                                redirect = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                Console.WriteLine("ParseHtmlDocument {0}", html_time);
-                Console.WriteLine("GetHtmlDocument {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
-return doc;
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("GetHtmlDocument failed");
-            }
-            return null;
-        }
     }
 }
