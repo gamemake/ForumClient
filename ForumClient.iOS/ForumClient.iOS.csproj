@@ -171,7 +171,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resources\" />
-    <Folder Include="Resources\json\" />
+    <Folder Include="Resources\config\" />
   </ItemGroup>
   <ItemGroup>
     <InterfaceDefinition Include="LaunchScreen.storyboard" />
@@ -198,8 +198,8 @@
     <BundleResource Include="Resources\Icon-76.png" />
     <BundleResource Include="Resources\Icon-60%403x.png" />
     <BundleResource Include="Resources\Icon-60%402x.png" />
-    <BundleResource Include="Resources\json\hipda.json" />
-    <BundleResource Include="Resources\json\1024.json" />
+    <BundleResource Include="Resources\config\hipda.txt" />
+    <BundleResource Include="Resources\config\1024.txt" />
   </ItemGroup>
   <Import Project="..\HtmlAgilityPack\HtmlAgilityPack.projitems" Label="Shared" Condition="Exists('..\HtmlAgilityPack\HtmlAgilityPack.projitems')" />
   <Import Project="..\ForumClient.Api\ForumClient.Api.projitems" Label="Shared" Condition="Exists('..\ForumClient.Api\ForumClient.Api.projitems')" />

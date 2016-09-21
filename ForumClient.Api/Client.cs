@@ -192,20 +192,20 @@ namespace ForumClient.Api
                     foreach (var node in nodes)
                     {
                         var id = GetStringByXPath(node, config.forum_id);
-                        var name = node.SelectSingleNode(config.forum_name);
-                        var desc = node.SelectSingleNode(config.forum_desc);
+                        var name = GetStringByXPath(node, config.forum_name);
+                        var desc = GetStringByXPath(node, config.forum_desc);
 
-                        if (id == "" || name == null || desc == null)
+                        if (id == "" || name == "" || desc == "")
                         {
-                            Console.WriteLine("error in parse forum node : id == null || name == null || desc == null");
+                            Console.WriteLine("error in parse forum node : id == \"\" || name == \"\" || desc == \"\"");
                         }
                         else
                         {
                             forums.Add(new Api.Forum()
                             {
                                 Id = GetUrlString(id, "fid=", "&"),
-                                Name = HtmlEntity.DeEntitize(name.InnerText),
-                                Desc = HtmlEntity.DeEntitize(desc.InnerText)
+                                Name = name,
+                                Desc = desc
                             });
                         }
                     }
@@ -241,10 +241,10 @@ namespace ForumClient.Api
                         var ontop = node.SelectSingleNode(config.thread_ontop);
                         var id = FixThreadId(GetStringByXPath(node, config.thread_id));
                         var title = GetStringByXPath(node, config.thread_title);
-                        var post_author = node.SelectSingleNode(config.thread_post_author);
-                        var post_time = node.SelectSingleNode(config.thread_post_time);
-                        var last_author = node.SelectSingleNode(config.thread_last_author);
-                        var last_time = node.SelectSingleNode(config.thread_last_time);
+                        var post_author = GetStringByXPath(node, config.thread_post_author);
+                        var post_time = FixTimeString(GetStringByXPath(node, config.thread_post_time));
+                        var last_author = GetStringByXPath(node, config.thread_last_author);
+                        var last_time = FixTimeString(GetStringByXPath(node, config.thread_last_time));
 
                         if (id == "" || title == "")
                         {
@@ -256,10 +256,10 @@ namespace ForumClient.Api
                             OnTop = ontop != null,
                             Id = GetUrlString(GetUrlString(id, "tid=", "&"), "/", "."),
                             Title = HtmlEntity.DeEntitize(title),
-                            PostAuthor = post_author != null ? HtmlEntity.DeEntitize(post_author.InnerText) : "",
-                            PostTime = post_time != null ? FixTimeString(HtmlEntity.DeEntitize(post_time.InnerText)) : "",
-                            LastAuthor = last_author != null ? HtmlEntity.DeEntitize(last_author.InnerText) : "",
-                            LastTime = last_time != null ? FixTimeString(HtmlEntity.DeEntitize(last_time.InnerText)) : ""
+                            PostAuthor = post_author,
+                            PostTime = post_time,
+                            LastAuthor = last_author,
+                            LastTime = last_time
                         });
                     }
 
@@ -292,13 +292,15 @@ namespace ForumClient.Api
                     foreach (var node in nodes)
                     {
                         var id = GetStringByXPath(node, config.post_id);
-                        var author = node.SelectSingleNode(config.post_author);
-                        var time = node.SelectSingleNode(config.post_time);
+                        id = GetUrlString(id, "post=", "&");
+                        id = GetUrlString(id, "pid=", "&");
+                        var author = GetStringByXPath(node, config.post_author);
+                        var time = FixTimeString(GetStringByXPath(node, config.post_time));
                         var content = node.SelectSingleNode(config.post_content);
 
-                        if (id == "" || content == null)
+                        if (author == "" || content == null)
                         {
-                            Console.WriteLine("error in parse thrad node : id == null || title == null");
+                            Console.WriteLine("error in parse thrad node : author == \"\" || content == null");
                         }
 
                         var list = new List<Api.PostNode>();
@@ -307,9 +309,9 @@ namespace ForumClient.Api
 
                         posts.Add(new Api.Post()
                         {
-                            Id = GetUrlString(id, "pid=", "&"),
-                            PostAuthor = author != null ? HtmlEntity.DeEntitize(author.InnerText) : "",
-                            PostTime = time != null ? FixTimeString(HtmlEntity.DeEntitize(time.InnerText)) : "",
+                            Id = id,
+                            PostAuthor = author,
+                            PostTime = time,
                             Content = list
                         });
                     }
@@ -352,6 +354,8 @@ namespace ForumClient.Api
                     using (var resp = await client.GetAsync(url))
                     {
                         var data = await resp.Content.ReadAsByteArrayAsync();
+
+                        System.IO.File.WriteAllText("/Users/gamemake/a.html", System.Text.Encoding.UTF8.GetString(data));
 
                         var html_start = DateTime.UtcNow;
                         doc = new HtmlDocument();
@@ -401,27 +405,39 @@ namespace ForumClient.Api
 
         string FixTimeString(string time)
         {
+            if (time.Length == 0) return "";
             int start, end;
-            for (start = 0; start < time.Length && !Char.IsDigit(time[start]); start++) { }
+            for (start = 0; !Char.IsDigit(time[start]); start++)
+            {
+                if (start + 1 == time.Length) return "";
+            }
             for (end = time.Length - 1; end > start && !Char.IsDigit(time[end]); end--) { }
-            return time.Substring(start, end - start);
+            return time.Substring(start, end - start + 1);
         }
 
         string FixThreadId(string value)
         {
+            value = GetUrlString(value, "tid=", "&");
+            if (value.Length == 0) return "";
             int end, start;
-            for (end = value.Length - 1; end > 0 && !Char.IsDigit(value[end]); end--) { }
-            for (start = end; start >0 && Char.IsDigit(value[start-1]); start--) { }
-            return value.Substring(start, end - start);
+            for (end = value.Length - 1; !Char.IsDigit(value[end]); end--)
+            {
+                if (end == 0) return "";
+            }
+            for (start = end; start > 0 && Char.IsDigit(value[start - 1]); start--) { }
+            return value.Substring(start, end - start + 1);
         }
 
         string GetUrlString(string url, string start, string end)
         {
             var retval = url;
             int pos = retval.IndexOf(start, StringComparison.CurrentCulture);
-            if (pos >= 0) retval = retval.Substring(pos + start.Length);
-            pos = retval.IndexOf(end, StringComparison.CurrentCulture);
-            if (pos >= 0) retval = retval.Substring(0, pos);
+            if (pos >= 0)
+            {
+                retval = retval.Substring(pos + start.Length);
+                pos = retval.IndexOf(end, StringComparison.CurrentCulture);
+                if (pos >= 0) retval = retval.Substring(0, pos);
+            }
             return retval;
         }
 

@@ -23,7 +23,7 @@ namespace ForumClient
 #elif __ANDROID__
             using (var stream = Android.App.Application.Context.ApplicationContext.Assets.Open("json/" + config_name +".json"))
             {
-                config.LoadFromStream(new System.IO.StreamReader(stream));
+                config.LoadFromText(new System.IO.StreamReader(stream).ReadToEnd());
             }
 #endif
 

@@ -16,17 +16,17 @@ namespace ForumClient
         {
             try
             {
-                /*
+#if true
                 var config_name = "hipda";
-                var config_file = @"D:\Work\ForumClient\Data\hipda.json";
+                var config_file = @"/Users/gamemake/Projects/ForumClient/Config/hipda.txt";
                 var fourm_id = "7";
                 var thread_id = "193801";
-                */
-
+#else
                 var config_name = "1024";
-                var config_file = @"/Users/gamemake/Projects/ForumClient/Data/1024.txt";
+                var config_file = @"/Users/gamemake/Projects/ForumClient/Config/1024.txt";
                 var fourm_id = "7";
                 var thread_id = "1315";
+#endif
 
                 var config = new Api.Config();
                 config.LoadFromText(System.IO.File.ReadAllText(config_file));
