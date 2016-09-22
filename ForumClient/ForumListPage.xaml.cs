@@ -6,7 +6,7 @@ using Xamarin.Forms;
 
 namespace ForumClient
 {
-    public partial class FirstPage : ContentPage
+    public partial class ForumListPage : ContentPage
     {
         class ForumMenuItem : MenuItem
         {
@@ -15,10 +15,16 @@ namespace ForumClient
             public string SubID { get; set; }
         }
 
-        public FirstPage()
+        private Api.Client Client;
+        public ForumListPage(Api.Client client)
         {
+            Client = client;
+
             InitializeComponent();
+
             forumList.RefreshCommand = new Command(Fetch);
+
+            Fetch();
         }
 
         private async void OnForumSelected(object sender, SelectedItemChangedEventArgs e)
@@ -28,8 +34,8 @@ namespace ForumClient
             {
                 forumList.SelectedItem = null;
 
-                var navPage = Parent as NavigationPage;
-                var page = new ForumPage(item.SubID);
+                var page = new ThreadListPage(Client, item.SubID);
+                var navPage = (Application.Current as App).RootPage;
                 await navPage.Navigation.PushAsync(page);
                 page.Fetch();
             }
@@ -60,7 +66,7 @@ namespace ForumClient
             if(!forumList.IsRefreshing)
                 forumList.BeginRefresh();
 
-            var list = await App.GetClient().GetForumList();
+            var list = await Client.GetForumList();
             if (list != null)
             {
                 Update(list);

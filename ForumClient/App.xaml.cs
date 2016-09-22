@@ -5,36 +5,38 @@ namespace ForumClient
 {
     public partial class App : Application
     {
-        private Api.Client client;
-
-        public static Api.Client GetClient()
+        public NavigationPage RootPage
         {
-            return (Application.Current as App).client;
+            get { return MainPage as NavigationPage; }
+        }
+
+        public Page MasterPage
+        {
+            get { return BasePage.Master; }
+            set { BasePage.Master = value; }
+        }
+
+        public Page DetailPage
+        {
+            get { return BasePage.Detail; }
+            set { BasePage.Detail = value; }
+        }
+
+        private MasterDetailPage _BasePage;
+        public MasterDetailPage BasePage
+        {
+            get { return _BasePage; }
         }
 
         public App()
         {
             InitializeComponent();
-
-            MainPage = new NavigationPage(new AccountPage());
-        }
-
-        public void SetClient(string name)
-        {
-            var config = new Api.Config();
-            string config_name = "1024";
-
-#if __IOS__
-            string config_file = System.IO.Path.Combine(Foundation.NSBundle.MainBundle.BundlePath, "config/" + config_name +".txt");
-            config.LoadFromText(System.IO.File.ReadAllText(config_file));
-#elif __ANDROID__
-            using (var stream = Android.App.Application.Context.ApplicationContext.Assets.Open("config/" + config_name + ".txt"))
+            _BasePage = new MasterDetailPage()
             {
-                config.LoadFromText(new System.IO.StreamReader(stream).ReadToEnd());
-            }
-#endif
-
-            client = new ForumClient.Api.Client(config_name, config);
+                Master = new MainMenuPage(),
+                Detail = new HomePage()
+            };
+            MainPage = new NavigationPage(BasePage);
         }
 
         protected override void OnStart()

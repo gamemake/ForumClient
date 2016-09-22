@@ -19,25 +19,24 @@ namespace ForumClient
 
         async void SignIn(string name)
         {
-            var app = (Application.Current as App);
-            app.SetClient("hipda");
+            var client = Api.Client.CreateClient(name);
 
-            if (!App.GetClient().IsAuthed())
+            if (!client.IsAuthed())
             {
                 if (!string.IsNullOrEmpty(UsernameEntry.Text) && !string.IsNullOrEmpty(PasswordEntry.Text))
                 {
-                    var result = await App.GetClient().SignIn(UsernameEntry.Text, PasswordEntry.Text);
+                    var result = await client.SignIn(UsernameEntry.Text, PasswordEntry.Text);
                     if (result != "")
                     {
                         MessageLabel.Text = result;
                         return;
                     }
 
-                    App.GetClient().SaveCookies();
+                    client.SaveCookies();
                 }
             }
 
-            var page = new FirstPage();
+            var page = new ForumListPage(client);
 #if __ANDROID__
             Application.Current.MainPage = new NavigationPage(page);
 #else

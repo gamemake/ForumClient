@@ -31,4 +31,4 @@ post_time=./tr/td[@class='postcontent']/div[@class='postinfo']/div[@class='poste
 post_content=./tr/td[@class='postcontent']/div[@class='defaultpost']/div/div/table/tr/td[@class='t_msgfont']
 post_ignore=.//div[@class='t_attach']|.//span[@style='position: absolute; display: none']
 post_page_end=
-post_page_next=/html/body/div[@id='wrap']/div[$class='forumcontrol']/table/tbody/tr/td/div[@class='pages']/a[@class='next']
+post_page_next=/html/body/div[@id='wrap']/div[@class='forumcontrol']/table/tbody/tr/td/div[@class='pages']/a[@class='next']

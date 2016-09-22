@@ -2,12 +2,10 @@
 <ContentPage
 		xmlns="http://xamarin.com/schemas/2014/forms"
 		xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-		x:Class="ForumClient.SettingsPage"
-		Title="Settings"
-		Padding="10,5">
+		x:Class="ForumClient.HomePage">
 	<ContentPage.Content>
 		<StackLayout>
-			<Label Text="Settings" />
+			<Label Text="Welcome to China!" FontSize="20" />
 		</StackLayout>
 	</ContentPage.Content>
 </ContentPage>

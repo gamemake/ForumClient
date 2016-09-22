@@ -2,12 +2,12 @@
 <ContentPage
 		xmlns="http://xamarin.com/schemas/2014/forms"
 		xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-		x:Class="ForumClient.SettingsPage"
-		Title="Settings"
-		Padding="10,5">
+		x:Class="ForumClient.MainMenuPage"
+		Title="Home Page">
 	<ContentPage.Content>
 		<StackLayout>
-			<Label Text="Settings" />
+			<Button Text="1024" Clicked="OnChangeForum"/>
+			<Button Text="HiPDA" Clicked="OnChangeForum"/>
 		</StackLayout>
 	</ContentPage.Content>
 </ContentPage>

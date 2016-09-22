@@ -6,7 +6,7 @@ using Xamarin.Forms;
 
 namespace ForumClient
 {
-    public partial class ThreadPage : ContentPage
+    public partial class PostListPage : ContentPage
     {
         private System.Threading.Semaphore sem = new System.Threading.Semaphore(0, 2);
         private int sleep_time = 0;
@@ -18,19 +18,23 @@ namespace ForumClient
         private int totalNode = 0;
         private int currentNode = 0;
         private bool lastPage = false;
+        private Api.Client Client;
 
-        public ThreadPage(Api.Thread info)
+        public PostListPage(Api.Client client, Api.Thread info)
         {
+            Client = client;
             threadInfo = info;
 
             InitializeComponent();
-            scrollView.Scrolled += OnScrolled;
 
+            scrollView.Scrolled += OnScrolled;
             content.Children.Add(new Label()
             {
                 Text = threadInfo.Title,
                 FontAttributes = FontAttributes.Bold
             });
+
+            Fetch();
         }
 
         protected override void OnDisappearing()
@@ -44,7 +48,7 @@ namespace ForumClient
             if (IsLoading) return;
             IsLoading = true;
 
-            var list = await App.GetClient().GetThread(threadInfo.Id, currentPage + 1, () => { lastPage = true; });
+            var list = await Client.GetThread(threadInfo.Id, currentPage + 1, () => { lastPage = true; });
             if (list != null)
             {
                 currentPage += 1;

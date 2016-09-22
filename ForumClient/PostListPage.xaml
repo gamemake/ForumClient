@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ContentPage
+		xmlns="http://xamarin.com/schemas/2014/forms"
+		xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+		x:Class="ForumClient.PostListPage"
+		Title="主题"
+		Padding="0">
+	<ContentPage.Content>
+		<StackLayout Spacing = "0">
+			<ProgressBar x:Name="progressBar" VerticalOptions="Start" Progress="0.5" Margin = "0,0,0,0"/>
+			<ScrollView x:Name="scrollView" VerticalOptions="FillAndExpand">
+				<StackLayout x:Name="content">
+				</StackLayout>
+			</ScrollView>
+		</StackLayout>
+	</ContentPage.Content>
+</ContentPage>

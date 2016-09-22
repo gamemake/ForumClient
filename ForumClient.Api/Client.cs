@@ -49,6 +49,25 @@ namespace ForumClient.Api
         private System.Net.CookieContainer cookies;
         private HttpClient client;
 
+        public static Client CreateClient(string config_name)
+        {
+            var config = new Config();
+
+#if __IOS__
+            config.LoadFromText(System.IO.File.ReadAllText(System.IO.Path.Combine(Foundation.NSBundle.MainBundle.BundlePath, "config/" + config_name +".txt")));
+#elif __ANDROID__
+            using (var stream = Android.App.Application.Context.ApplicationContext.Assets.Open("config/" + config_name + ".txt"))
+            {
+                config.LoadFromText(new System.IO.StreamReader(stream).ReadToEnd());
+            }
+#else
+
+#endif
+
+            return new Client(config_name, config);
+        }
+
+
         public HttpClient GetHttpClient()
         {
             return client;
@@ -195,16 +214,16 @@ namespace ForumClient.Api
                     if (id == "" || name == "" || desc == "")
                     {
                         Console.WriteLine("error in parse forum node : id == \"\" || name == \"\" || desc == \"\"");
+                        Console.WriteLine("XPath = {0}", node.XPath);
+                        continue;
                     }
-                    else
+
+                    forums.Add(new Api.Forum()
                     {
-                        forums.Add(new Api.Forum()
-                        {
-                            Id = GetUrlString(id, "fid=", "&"),
-                            Name = name,
-                            Desc = desc
-                        });
-                    }
+                        Id = GetUrlString(id, "fid=", "&"),
+                        Name = name,
+                        Desc = desc
+                    });
                 }
 
                 Console.WriteLine("ParseForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
@@ -250,13 +269,15 @@ namespace ForumClient.Api
                     if (id == "" || title == "")
                     {
                         Console.WriteLine("error in parse thrad node : id == null || title == null");
+                        Console.WriteLine("XPath = {0}", node.XPath);
+                        continue;
                     }
 
                     threads.Add(new Api.Thread()
                     {
                         OnTop = ontop != null,
-                        Id = GetUrlString(GetUrlString(id, "tid=", "&"), "/", "."),
-                        Title = HtmlEntity.DeEntitize(title),
+                        Id = id,
+                        Title = title,
                         PostAuthor = post_author,
                         PostTime = post_time,
                         LastAuthor = last_author,
@@ -285,7 +306,15 @@ namespace ForumClient.Api
                 if (doc == null) return null;
 
                 var start = DateTime.UtcNow;
-                var posts = new List<Post>();
+                var last_page = true;
+                if (!string.IsNullOrWhiteSpace(config.post_page_end))
+                {
+                    last_page = doc.DocumentNode.SelectSingleNode(config.post_page_end) != null;
+                }
+                if (!string.IsNullOrWhiteSpace(config.post_page_next))
+                {
+                    last_page = doc.DocumentNode.SelectSingleNode(config.post_page_next) != null;
+                }
 
                 var nodes = doc.DocumentNode.SelectNodes(config.post_node);
                 if (nodes == null)
@@ -294,6 +323,7 @@ namespace ForumClient.Api
                     return null;
                 }
 
+                var posts = new List<Post>();
                 foreach (var node in nodes)
                 {
                     var id = GetStringByXPath(node, config.post_id);
@@ -305,7 +335,12 @@ namespace ForumClient.Api
 
                     if (author == "" || content == null)
                     {
-                        Console.WriteLine("error in parse thrad node : author == \"\" || content == null");
+                        Console.WriteLine("error in parse thread node : author == \"\" || content == null");
+                        Console.WriteLine("XPath = {0}", node.XPath);
+                        Console.WriteLine("===============================================================");
+                        Console.WriteLine(node.InnerHtml);
+                        Console.WriteLine("===============================================================");
+                        continue;
                     }
 
                     var list = new List<Api.PostNode>();
@@ -319,16 +354,6 @@ namespace ForumClient.Api
                         PostTime = time,
                         Content = list
                     });
-                }
-
-                var last_page = true;
-                if (!string.IsNullOrWhiteSpace(config.post_page_end))
-                {
-                    last_page = doc.DocumentNode.SelectSingleNode(config.post_page_end) != null;
-                }
-                if (!string.IsNullOrWhiteSpace(config.post_page_next))
-                {
-                    last_page = doc.DocumentNode.SelectSingleNode(config.post_page_next) != null;
                 }
 
                 Console.WriteLine("ParsePostList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);

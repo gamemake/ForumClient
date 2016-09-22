@@ -6,7 +6,7 @@ using Xamarin.Forms;
 
 namespace ForumClient
 {
-    public partial class ForumPage : ContentPage
+    public partial class ThreadListPage : ContentPage
     {
         private class ThreadMenuItem : MenuItem
         {
@@ -63,18 +63,23 @@ namespace ForumClient
         private ObservableCollection<ThreadMenuItem> threadListData;
         private string currentForumId;
         private int currentPage = 0;
-        HashSet<string> tidSet = new HashSet<string>();
-        bool IsLoading = false;
+        private HashSet<string> tidSet = new HashSet<string>();
+        private bool IsLoading = false;
+        private Api.Client Client;
 
-        public ForumPage(string forumId)
+        public ThreadListPage(Api.Client client, string forumId)
         {
+            Client = client;
             currentForumId = forumId;
             currentPage = 0;
 
             InitializeComponent();
+
             threadListData = new ObservableCollection<ThreadMenuItem>();
             threadList.ItemsSource = threadListData;
             threadList.RefreshCommand = new Command(PullToRefresh);
+
+            Fetch();
         }
 
         private void Update(List<Api.Thread> list, bool refresh)
@@ -114,7 +119,7 @@ namespace ForumClient
                 tidSet.Clear();
             }
 
-            var list = await App.GetClient().GetForum(currentForumId, currentPage + 1);
+            var list = await Client.GetForum(currentForumId, currentPage + 1);
             if (list != null)
             {
                 currentPage += 1;
@@ -143,8 +148,8 @@ namespace ForumClient
             {
                 threadList.SelectedItem = null;
 
-                var navPage = Parent as NavigationPage;
-                var page = new ThreadPage(item.Data);
+                var navPage = (Application.Current as App).RootPage;
+                var page = new PostListPage(Client, item.Data);
                 await navPage.Navigation.PushAsync(page);
                 page.Fetch();
             }
