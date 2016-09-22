@@ -28,7 +28,7 @@ post_node=/html/body/div[@id='main']/div[@class='t t2']/table
 post_id=./tr/th/div[@class='tiptop']/a[contains(@href,'quote')]/@href
 post_author=./tr/th//b/text()
 post_time=./tr/th/div[@class='tipad']/text()
-post_content=./tr/th//div[@class='tpc_content']
+post_content=./tr/th//div[contains(@class,'tpc_content')]
 post_ignore=.//script|.//SCRIPT
 post_page_end=/html/body/div[@id='main']/div[@class='t3']/table/tbody/tr/td[@align='left']/div[@class='pages']/a[@id='last'][contains(@class,'gray')]
 post_page_next=

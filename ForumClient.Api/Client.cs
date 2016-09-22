@@ -448,6 +448,25 @@ namespace ForumClient.Api
             return value.Substring(start, end - start + 1);
         }
 
+        string FixLinkString(string link)
+        {
+            var retval = link;
+            var start = "http://www.viidii.info/?";
+            var end = "&z";
+            int pos = retval.IndexOf(start, StringComparison.CurrentCulture);
+            if (pos >= 0)
+            {
+                retval = retval.Substring(pos + start.Length);
+                if (!string.IsNullOrEmpty(end))
+                {
+                    pos = retval.IndexOf(end, StringComparison.CurrentCulture);
+                    if (pos >= 0) retval = retval.Substring(0, pos);
+                    return retval.Replace("______", ".");
+                }
+            }
+            return link;
+        }
+
         string GetUrlString(string url, string start, string end)
         {
             var retval = url;
@@ -549,7 +568,7 @@ namespace ForumClient.Api
                         nodes.Add(new PostNode()
                         {
                             NodeType = "link",
-                            HRef = href,
+                            HRef = FixLinkString(href),
                             Text = ""
                         });
                     }
