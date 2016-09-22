@@ -53,7 +53,7 @@ namespace ForumClient
                 currentNode = 0;
                 foreach (var post in list)
                 {
-                    totalNode += post.Nodes.Count;
+                    totalNode += post.Content.Count;
                 }
                 progressBar.Progress = 0;
 
@@ -164,7 +164,7 @@ namespace ForumClient
                 Spacing = 0,
                 Children =
                     {
-                        new Label() { Text = post.Author.Name, TextColor=Color.Gray, FontSize = 10, HorizontalOptions=LayoutOptions.StartAndExpand },
+                        new Label() { Text = post.PostAuthor, TextColor=Color.Gray, FontSize = 10, HorizontalOptions=LayoutOptions.StartAndExpand },
                         new Label() { Text = post.PostTime,   TextColor=Color.Gray, FontSize = 10, HorizontalOptions=LayoutOptions.End },
                         refen, reply
                     }
@@ -183,7 +183,7 @@ namespace ForumClient
                     BeginPost(post);
                 });
 
-                foreach (var node in item.Nodes)
+                foreach (var node in item.Content)
                 {
                     System.Threading.Thread.Sleep(10);
                     Device.BeginInvokeOnMainThread(() =>

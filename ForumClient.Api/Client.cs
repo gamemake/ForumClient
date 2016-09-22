@@ -165,17 +165,8 @@ namespace ForumClient.Api
 
         public async Task<bool> SignOut()
         {
-            try
-            {
-                await GetHtmlDocument(config.logout_url, false);
-                return true;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("Exception  : {0}", e.Message);
-                Console.WriteLine("StackTrace : {0}", e.StackTrace);
-            }
-            return false;
+            var ret = await GetHtmlDocument(config.logout_url, false);
+            return ret != null;
         }
 
         public async Task<List<Forum>> GetForumList()
@@ -183,45 +174,49 @@ namespace ForumClient.Api
             try
             {
                 var doc = await GetHtmlDocument(config.forumlist_url, true);
-                if (doc != null)
+                if (doc == null) return null;
+
+                var forums = new List<Forum>();
+                var start = DateTime.UtcNow;
+
+                var nodes = doc.DocumentNode.SelectNodes(config.forum_node);
+                if (nodes == null)
                 {
-                    var forums = new List<Forum>();
-                    var start = DateTime.UtcNow;
-
-                    var nodes = doc.DocumentNode.SelectNodes(config.forum_node);
-                    foreach (var node in nodes)
-                    {
-                        var id = GetStringByXPath(node, config.forum_id);
-                        var name = GetStringByXPath(node, config.forum_name);
-                        var desc = GetStringByXPath(node, config.forum_desc);
-
-                        if (id == "" || name == "" || desc == "")
-                        {
-                            Console.WriteLine("error in parse forum node : id == \"\" || name == \"\" || desc == \"\"");
-                        }
-                        else
-                        {
-                            forums.Add(new Api.Forum()
-                            {
-                                Id = GetUrlString(id, "fid=", "&"),
-                                Name = name,
-                                Desc = desc
-                            });
-                        }
-                    }
-
-                    Console.WriteLine("ParseForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
-                    return forums;
+                    Console.WriteLine("ParseForumList error : nodes not found");
+                    return null;
                 }
+
+                foreach (var node in nodes)
+                {
+                    var id = GetStringByXPath(node, config.forum_id);
+                    var name = GetStringByXPath(node, config.forum_name);
+                    var desc = GetStringByXPath(node, config.forum_desc);
+
+                    if (id == "" || name == "" || desc == "")
+                    {
+                        Console.WriteLine("error in parse forum node : id == \"\" || name == \"\" || desc == \"\"");
+                    }
+                    else
+                    {
+                        forums.Add(new Api.Forum()
+                        {
+                            Id = GetUrlString(id, "fid=", "&"),
+                            Name = name,
+                            Desc = desc
+                        });
+                    }
+                }
+
+                Console.WriteLine("ParseForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+                return forums;
             }
             catch (Exception e)
             {
+                Console.WriteLine("ParseForumList exception");
                 Console.WriteLine("Exception  : {0}", e.Message);
                 Console.WriteLine("StackTrace : {0}", e.StackTrace);
+                return null;
             }
-
-            Console.WriteLine("ParseForumList failed");
-            return null;
         }
 
         public async Task<List<Thread>> GetForum(string fid, int page)
@@ -230,51 +225,55 @@ namespace ForumClient.Api
             {
                 var url = string.Format(config.threadlist_url, fid, page);
                 var doc = await GetHtmlDocument(url, true);
-                if (doc != null)
+                if (doc == null) return null;
+
+                var start = DateTime.UtcNow;
+                var threads = new List<Thread>();
+
+                var nodes = doc.DocumentNode.SelectNodes(config.thread_node);
+                if (nodes == null)
                 {
-                    var start = DateTime.UtcNow;
-                    var threads = new List<Thread>();
+                    Console.WriteLine("ParseThreadList error : nodes not found");
+                    return null;
+                }
 
-                    var nodes = doc.DocumentNode.SelectNodes(config.thread_node);
-                    foreach (var node in nodes)
+                foreach (var node in nodes)
+                {
+                    var ontop = node.SelectSingleNode(config.thread_ontop);
+                    var id = FixThreadId(GetStringByXPath(node, config.thread_id));
+                    var title = GetStringByXPath(node, config.thread_title);
+                    var post_author = GetStringByXPath(node, config.thread_post_author);
+                    var post_time = FixTimeString(GetStringByXPath(node, config.thread_post_time));
+                    var last_author = GetStringByXPath(node, config.thread_last_author);
+                    var last_time = FixTimeString(GetStringByXPath(node, config.thread_last_time));
+
+                    if (id == "" || title == "")
                     {
-                        var ontop = node.SelectSingleNode(config.thread_ontop);
-                        var id = FixThreadId(GetStringByXPath(node, config.thread_id));
-                        var title = GetStringByXPath(node, config.thread_title);
-                        var post_author = GetStringByXPath(node, config.thread_post_author);
-                        var post_time = FixTimeString(GetStringByXPath(node, config.thread_post_time));
-                        var last_author = GetStringByXPath(node, config.thread_last_author);
-                        var last_time = FixTimeString(GetStringByXPath(node, config.thread_last_time));
-
-                        if (id == "" || title == "")
-                        {
-                            Console.WriteLine("error in parse thrad node : id == null || title == null");
-                        }
-
-                        threads.Add(new Api.Thread()
-                        {
-                            OnTop = ontop != null,
-                            Id = GetUrlString(GetUrlString(id, "tid=", "&"), "/", "."),
-                            Title = HtmlEntity.DeEntitize(title),
-                            PostAuthor = post_author,
-                            PostTime = post_time,
-                            LastAuthor = last_author,
-                            LastTime = last_time
-                        });
+                        Console.WriteLine("error in parse thrad node : id == null || title == null");
                     }
 
-                    Console.WriteLine("ParseThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
-                    return threads;
+                    threads.Add(new Api.Thread()
+                    {
+                        OnTop = ontop != null,
+                        Id = GetUrlString(GetUrlString(id, "tid=", "&"), "/", "."),
+                        Title = HtmlEntity.DeEntitize(title),
+                        PostAuthor = post_author,
+                        PostTime = post_time,
+                        LastAuthor = last_author,
+                        LastTime = last_time
+                    });
                 }
+
+                Console.WriteLine("ParseThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+                return threads;
             }
             catch (Exception e)
             {
+                Console.WriteLine("ParseThreadList exception");
                 Console.WriteLine("Exception  : {0}", e.Message);
                 Console.WriteLine("StackTrace : {0}", e.StackTrace);
+                return null;
             }
-
-            Console.WriteLine("ParseThreadList failed");
-            return null;
         }
 
         public async Task<List<Post>> GetThread(string tid, int page, PageEndNotify notify = null)
@@ -283,62 +282,66 @@ namespace ForumClient.Api
             {
                 var url = string.Format(config.postlist_url, tid, page);
                 var doc = await GetHtmlDocument(url, true);
-                if (doc != null)
+                if (doc == null) return null;
+
+                var start = DateTime.UtcNow;
+                var posts = new List<Post>();
+
+                var nodes = doc.DocumentNode.SelectNodes(config.post_node);
+                if (nodes == null)
                 {
-                    var start = DateTime.UtcNow;
-                    var posts = new List<Post>();
-
-                    var nodes = doc.DocumentNode.SelectNodes(config.post_node);
-                    foreach (var node in nodes)
-                    {
-                        var id = GetStringByXPath(node, config.post_id);
-                        id = GetUrlString(id, "post=", "&");
-                        id = GetUrlString(id, "pid=", "&");
-                        var author = GetStringByXPath(node, config.post_author);
-                        var time = FixTimeString(GetStringByXPath(node, config.post_time));
-                        var content = node.SelectSingleNode(config.post_content);
-
-                        if (author == "" || content == null)
-                        {
-                            Console.WriteLine("error in parse thrad node : author == \"\" || content == null");
-                        }
-
-                        var list = new List<Api.PostNode>();
-                        RemoveNodes(content);
-                        ParseHtmlNode(list, content);
-
-                        posts.Add(new Api.Post()
-                        {
-                            Id = id,
-                            PostAuthor = author,
-                            PostTime = time,
-                            Content = list
-                        });
-                    }
-
-                    var last_page = true;
-                    if (!string.IsNullOrWhiteSpace(config.post_page_end))
-                    {
-                        last_page = doc.DocumentNode.SelectSingleNode(config.post_page_end) != null;
-                    }
-                    if (!string.IsNullOrWhiteSpace(config.post_page_next))
-                    {
-                        last_page = doc.DocumentNode.SelectSingleNode(config.post_page_next) != null;
-                    }
-
-                    Console.WriteLine("ParsePostList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
-                    if (last_page) notify();
-                    return posts;
+                    Console.WriteLine("ParsePostList error : nodes not found");
+                    return null;
                 }
+
+                foreach (var node in nodes)
+                {
+                    var id = GetStringByXPath(node, config.post_id);
+                    id = GetUrlString(id, "post=", "&");
+                    id = GetUrlString(id, "pid=", "&");
+                    var author = GetStringByXPath(node, config.post_author);
+                    var time = FixTimeString(GetStringByXPath(node, config.post_time));
+                    var content = node.SelectSingleNode(config.post_content);
+
+                    if (author == "" || content == null)
+                    {
+                        Console.WriteLine("error in parse thrad node : author == \"\" || content == null");
+                    }
+
+                    var list = new List<Api.PostNode>();
+                    RemoveNodes(content);
+                    ParseHtmlNode(list, content);
+
+                    posts.Add(new Api.Post()
+                    {
+                        Id = id,
+                        PostAuthor = author,
+                        PostTime = time,
+                        Content = list
+                    });
+                }
+
+                var last_page = true;
+                if (!string.IsNullOrWhiteSpace(config.post_page_end))
+                {
+                    last_page = doc.DocumentNode.SelectSingleNode(config.post_page_end) != null;
+                }
+                if (!string.IsNullOrWhiteSpace(config.post_page_next))
+                {
+                    last_page = doc.DocumentNode.SelectSingleNode(config.post_page_next) != null;
+                }
+
+                Console.WriteLine("ParsePostList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+                if (last_page) notify();
+                return posts;
             }
             catch (Exception e)
             {
+                Console.WriteLine("ParsePostList exception");
                 Console.WriteLine("Exception  : {0}", e.Message);
                 Console.WriteLine("StackTrace : {0}", e.StackTrace);
+                return null;
             }
-
-            Console.WriteLine("ParsePostList failed");
-            return null;
         }
 
         public async System.Threading.Tasks.Task<HtmlDocument> GetHtmlDocument(string url, bool redirect)
@@ -349,31 +352,21 @@ namespace ForumClient.Api
                 var start = System.DateTime.UtcNow;
                 double html_time = 0;
 
-                for (; redirect;)
+                for (;;)
                 {
                     using (var resp = await client.GetAsync(url))
                     {
                         var data = await resp.Content.ReadAsByteArrayAsync();
-
-                        System.IO.File.WriteAllText("/Users/gamemake/a.html", System.Text.Encoding.UTF8.GetString(data));
 
                         var html_start = DateTime.UtcNow;
                         doc = new HtmlDocument();
                         doc.Load(new System.IO.MemoryStream(data), System.Text.Encoding.GetEncoding(config.text_encoder));
                         html_time += (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond;
 
-                        if (redirect)
-                        {
-                            var node = doc.DocumentNode.SelectSingleNode("/html/head/meta[@http-equiv='refresh']/@content");
-                            if (node != null)
-                            {
-                                url = GetUrlString(node.ToString(), "=", "\n");
-                            }
-                            else
-                            {
-                                redirect = false;
-                            }
-                        }
+                        if (!redirect) break;
+                        var rurl = GetStringByXPath(doc.DocumentNode, "/html/head/meta[@http-equiv='refresh']/@content");
+                        if (rurl == "") break;
+                        url = GetUrlString(rurl, "url=", null);
                     }
                 }
 
@@ -381,11 +374,13 @@ namespace ForumClient.Api
                 Console.WriteLine("GetHtmlDocument {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
                 return doc;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 Console.WriteLine("GetHtmlDocument failed");
+                Console.WriteLine("Exception  : {0}", e.Message);
+                Console.WriteLine("StackTrace : {0}", e.StackTrace);
+                return null;
             }
-            return null;
         }
 
         string GetStringByXPath(HtmlNode basenode, string path)
@@ -435,8 +430,11 @@ namespace ForumClient.Api
             if (pos >= 0)
             {
                 retval = retval.Substring(pos + start.Length);
-                pos = retval.IndexOf(end, StringComparison.CurrentCulture);
-                if (pos >= 0) retval = retval.Substring(0, pos);
+                if (!string.IsNullOrEmpty(end))
+                {
+                    pos = retval.IndexOf(end, StringComparison.CurrentCulture);
+                    if (pos >= 0) retval = retval.Substring(0, pos);
+                }
             }
             return retval;
         }

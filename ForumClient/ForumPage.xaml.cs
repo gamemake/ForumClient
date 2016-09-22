@@ -48,21 +48,14 @@ namespace ForumClient
             {
                 get
                 {
-                    return Data.Author.Name + " " + Data.PostTime;
+                    return Data.PostAuthor + " " + Data.PostTime;
                 }
             }
             public string LastPostInfo
             {
                 get
                 {
-                    if (Data.Last_Author != null)
-                    {
-                        return Data.Last_Author.Name + " " + Data.Last_PostTime;
-                    }
-                    else
-                    {
-                        return "";
-                    }
+                    return Data.LastAuthor + " " + Data.LastTime;
                 }
             }
         }

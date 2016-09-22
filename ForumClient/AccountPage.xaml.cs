@@ -17,22 +17,26 @@ namespace ForumClient
             await navPage.Navigation.PushAsync(new SettingsPage());
         }
 
-        async void OnSignIn(object sender, EventArgs e)
+        async void SignIn(string name)
         {
-            var result = await App.GetClient().SignIn(UsernameEntry.Text, PasswordEntry.Text);
-            if (result == "")
-            {
-                App.GetClient().SaveCookies();
-                OnAnonymousLogin(sender, e);
-            }
-            else
-            {
-                MessageLabel.Text = result;
-            }
-        }
+            var app = (Application.Current as App);
+            app.SetClient("hipda");
 
-        async void OnAnonymousLogin(object sender, EventArgs e)
-        {
+            if (!App.GetClient().IsAuthed())
+            {
+                if (!string.IsNullOrEmpty(UsernameEntry.Text) && !string.IsNullOrEmpty(PasswordEntry.Text))
+                {
+                    var result = await App.GetClient().SignIn(UsernameEntry.Text, PasswordEntry.Text);
+                    if (result != "")
+                    {
+                        MessageLabel.Text = result;
+                        return;
+                    }
+
+                    App.GetClient().SaveCookies();
+                }
+            }
+
             var page = new FirstPage();
 #if __ANDROID__
             Application.Current.MainPage = new NavigationPage(page);
@@ -42,6 +46,16 @@ namespace ForumClient
             await navPage.Navigation.PopAsync();
 #endif
             page.Fetch();
+        }
+
+        void OnSignIn_1024(object sender, EventArgs e)
+        {
+            SignIn("1024");
+        }
+
+        void OnSignIn_HiPDA(object sender, EventArgs e)
+        {
+            SignIn("hipda");
         }
 
         async void OnSettings(object sender, EventArgs e)
