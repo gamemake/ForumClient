@@ -1,4 +1,9 @@
 
+name=1024
+desc=2^10 lalalalalala
+icon=
+allow_anonymous=true
+
 text_encoder=gbk
 user_agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36
 base_url=http://cl.dicool.pw
@@ -16,6 +21,7 @@ forum_name=./th/h2/a/text()
 forum_desc=./th/span/text()
 
 thread_node=/html/body/div[@id='main']/div[@style='margin:3px auto']/table/tbody/tr[@align='center']
+thread_default=
 thread_ontop=./td[contains(text(), '↑')]
 thread_id=./td/h3/a/@href
 thread_title=./td/h3/a

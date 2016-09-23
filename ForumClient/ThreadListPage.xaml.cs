@@ -37,13 +37,6 @@ namespace ForumClient
                     return Data.Id;
                 }
             }
-            public string PageInfo
-            {
-                get
-                {
-                    return "10/10";
-                }
-            }
             public string PostInfo
             {
                 get

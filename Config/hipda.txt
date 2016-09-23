@@ -1,4 +1,9 @@
 
+name=HiPDA
+desc=HiPDA Living...
+icon=
+allow_anonymous=false
+
 text_encoder=gbk
 user_agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36
 base_url=http://www.hi-pda.com
@@ -15,10 +20,11 @@ forum_id=./th/div/h2/a/@href
 forum_name=./th/div/h2/a/text()
 forum_desc=./th/div/p/text()
 
-thread_node=/html/body/div[@id='wrap']/div[@class='main']/div[@class='content']/div[@id='threadlist']/table/tbody[@id]/tr
-thread_ontop=./td[@class='folder']/a/image[contains(@alt, '置顶')]
-thread_id=./th[@class='subject common']/span/a/@href
-thread_title=./th[@class='subject common']/span/a/text()
+thread_node=/html/body/div[@id='wrap']/div[@class='main']/div[@class='content']/div[@id='threadlist']/table/tbody/tr
+thread_default=./th/text()[.='版块主题']
+thread_ontop=
+thread_id=./th[contains(@class,'subject')]/span/a/@href
+thread_title=./th[contains(@class,'subject')]/span/a/text()
 thread_post_author=./td[@class='author']/cite/a/text()
 thread_post_time=./td[@class='author']/em/text()
 thread_last_author=./td[@class='lastpost']/cite/a/text()

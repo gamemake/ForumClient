@@ -57,5 +57,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)MainMenuPage.xaml.cs">
       <DependentUpon>MainMenuPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)MainPage.cs" />
   </ItemGroup>
 </Project>

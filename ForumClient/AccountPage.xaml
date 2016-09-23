@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:local="clr-namespace:ForumClient" x:Class="ForumClient.AccountPage" Title="Account">
-	<ContentPage.ToolbarItems>
-		<ToolbarItem Text="Sign Up" Clicked="OnSignUp" />
-	</ContentPage.ToolbarItems>
 	<ContentPage.Content>
 		<StackLayout VerticalOptions="Center" HorizontalOptions="FillAndExpand" Padding="20">
 			<Label Text="Username" />
@@ -11,8 +8,8 @@
 			<Entry x:Name="PasswordEntry" Placeholder="Please input password" IsPassword="true" />
 			<Label x:Name="MessageLabel" TextColor="Red" HorizontalOptions="FillAndExpand" HorizontalTextAlignment="Center" />
 			<StackLayout Orientation="Horizontal">
-				<Button Text="HiPDA" Clicked="OnSignIn_HiPDA" HorizontalOptions="StartAndExpand" />
-				<Button Text="1024" Clicked="OnSignIn_1024" HorizontalOptions="EndAndExpand" />
+				<Button Text="Anonymous" Clicked="OnAnonymous" HorizontalOptions="StartAndExpand" />
+				<Button Text="SignIn" Clicked="OnSignIn" HorizontalOptions="EndAndExpand" />
 			</StackLayout>
 		</StackLayout>
 	</ContentPage.Content>

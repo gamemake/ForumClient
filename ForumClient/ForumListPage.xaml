@@ -3,7 +3,8 @@
 		xmlns="http://xamarin.com/schemas/2014/forms"
 		xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
 		x:Class="ForumClient.ForumListPage"
-		Title="论坛">
+		Title="论坛"
+		Padding="10,5">
 	<ContentPage.Content>
 		<ListView x:Name="forumList" VerticalOptions="FillAndExpand" ItemSelected="OnForumSelected" SeparatorVisibility="None" IsPullToRefreshEnabled="true">
 			<ListView.ItemTemplate>

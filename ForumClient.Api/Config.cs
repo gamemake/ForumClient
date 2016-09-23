@@ -9,6 +9,19 @@ namespace ForumClient.Api
 
     public class Config
     {
+        public bool AllowAnonymous
+        {
+            get
+            {
+                return allow_anonymous == "true";
+            }
+        }
+        
+        public string name;
+        public string desc;
+        public string icon;
+        public string allow_anonymous;
+
         public string text_encoder;
         public string user_agent;
         public string base_url;
@@ -26,6 +39,7 @@ namespace ForumClient.Api
         public string forum_desc;
 
         public string thread_node;
+        public string thread_default;
         public string thread_ontop;
         public string thread_id;
         public string thread_title;
