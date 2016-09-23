@@ -39,9 +39,7 @@ namespace ForumClient
                 return;
             }
 
-            var page = new ForumListPage(Client);
-            (Application.Current as App).DetailPage = page;
-            page.Fetch();
+            (Application.Current as App).DetailPage = new ForumListPage(Client);
         }
     }
 }

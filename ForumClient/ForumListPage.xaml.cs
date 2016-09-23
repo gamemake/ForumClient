@@ -24,7 +24,7 @@ namespace ForumClient
 
             forumList.RefreshCommand = new Command(Fetch);
 
-            Fetch();
+            FetchBegin();
         }
 
         private async void OnForumSelected(object sender, SelectedItemChangedEventArgs e)
@@ -37,28 +37,12 @@ namespace ForumClient
                 var page = new ThreadListPage(Client, item.SubID);
                 var navPage = (Application.Current as App).RootPage;
                 await navPage.Navigation.PushAsync(page);
-                page.Fetch();
             }
         }
 
         private bool IsLoading = false;
 
-        private void Update(List<Api.Forum> list)
-        {
-            var start = DateTime.UtcNow;
-
-            var forumData = new ObservableCollection<ForumMenuItem>();
-            foreach (var item in list)
-            {
-                forumData.Add(new ForumMenuItem() { Title = item.Name, Description = item.Desc, SubID = item.Id });
-            }
-
-            start = DateTime.UtcNow;
-            forumList.ItemsSource = forumData;
-            Console.WriteLine("UpdateForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
-        }
-
-        public async void Fetch()
+        private void FetchBegin()
         {
             if (IsLoading) return;
 
@@ -66,22 +50,40 @@ namespace ForumClient
             if(!forumList.IsRefreshing)
                 forumList.BeginRefresh();
 
+            System.Threading.Tasks.Task.Run(() => Fetch());
+        }
+
+        private async void Fetch()
+        {
             var list = await Client.GetForumList();
-            if (list != null)
+            if (list == null)
             {
-                Update(list);
-            }
-            else
-            {
-                forumList.ItemsSource = new ObservableCollection<ForumMenuItem>();
+                Device.BeginInvokeOnMainThread(() => FetchEnd(null));
+                return;
             }
 
+            var items = new ObservableCollection<ForumMenuItem>();
+            foreach (var item in list)
+            {
+                items.Add(new ForumMenuItem() { Title = item.Name, Description = item.Desc, SubID = item.Id });
+            }
+            Device.BeginInvokeOnMainThread(() => FetchEnd(items));
+        }
+
+        private void FetchEnd(ObservableCollection<ForumMenuItem> items)
+        {
             forumList.EndRefresh();
             IsLoading = false;
 
-            if (list == null)
+            if (items == null)
             {
-                await DisplayAlert("提示错误", "数据刷新失败", "确定");
+                DisplayAlert("提示错误", "数据刷新失败", "确定");
+            }
+            else
+            {
+                var start = DateTime.UtcNow;
+                forumList.ItemsSource = items;
+                Console.WriteLine("UpdateForumList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
             }
         }
     }

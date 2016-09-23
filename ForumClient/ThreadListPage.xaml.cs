@@ -67,71 +67,75 @@ namespace ForumClient
             currentPage = 0;
 
             InitializeComponent();
-
-            threadListData = new ObservableCollection<ThreadMenuItem>();
-            threadList.ItemsSource = threadListData;
             threadList.RefreshCommand = new Command(PullToRefresh);
 
-            Fetch();
+            FetchBegin();
         }
 
-        private void Update(List<Api.Thread> list, bool refresh)
-        {
-            var start = DateTime.UtcNow;
-
-            foreach (var item in list)
-            {
-                var tid = item.OnTop ? "OnTop" + item.Id : item.Id;
-                if (!tidSet.Contains(tid))
-                {
-                    tidSet.Add(item.Id);
-                    threadListData.Add(new ThreadMenuItem(item));
-                }
-            }
-
-            if (refresh)
-            {
-                threadList.ItemsSource = threadListData;
-            }
-
-            Console.WriteLine("UpdateThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
-        }
-
-        public async void Fetch(bool refresh=false)
+        public void FetchBegin(bool refresh=false)
         {
             if (IsLoading) return;
 
             IsLoading = true;
-            if(!threadList.IsRefreshing && currentPage > 0)
+
+            if(!threadList.IsRefreshing && currentPage==0)
                 threadList.BeginRefresh();
 
             if (refresh)
             {
-                threadListData = new ObservableCollection<ThreadMenuItem>();
                 currentPage = 0;
                 tidSet.Clear();
             }
 
-            var list = await Client.GetForum(currentForumId, currentPage + 1);
-            if (list != null)
-            {
-                currentPage += 1;
-                Update(list, refresh);
-            }
+            System.Threading.Tasks.Task.Run(() => Fetch());
+        }
 
-            if(threadList.IsRefreshing)
+        public async void Fetch()
+        {
+            var list = await Client.GetForum(currentForumId, currentPage + 1);
+            Device.BeginInvokeOnMainThread(() => FetchEnd(list));
+        }
+
+        public void FetchEnd(List<Api.Thread> list)
+        {
+            if (threadList.IsRefreshing)
                 threadList.EndRefresh();
             IsLoading = false;
 
             if (list == null)
             {
-                await DisplayAlert("提示错误", "数据刷新失败", "确定");
+                DisplayAlert("提示错误", "数据刷新失败", "确定");
+            }
+            else
+            {
+                if (currentPage == 0)
+                    threadListData = new ObservableCollection<ThreadMenuItem>();
+
+                var start = DateTime.UtcNow;
+
+                foreach (var item in list)
+                {
+                    var tid = item.OnTop ? "OnTop" + item.Id : item.Id;
+                    if (!tidSet.Contains(tid))
+                    {
+                        tidSet.Add(item.Id);
+                        threadListData.Add(new ThreadMenuItem(item));
+                    }
+                }
+
+                if (currentPage==0)
+                {
+                    threadList.ItemsSource = threadListData;
+                }
+
+                Console.WriteLine("UpdateThreadList {0}", (double)(DateTime.UtcNow - start).Ticks / (double)TimeSpan.TicksPerSecond);
+                currentPage += 1;
             }
         }
 
         private void PullToRefresh()
         {
-            Fetch(true);
+            FetchBegin(true);
         }
 
         private async void OnThreadSelected(object sender, SelectedItemChangedEventArgs e)
@@ -144,7 +148,6 @@ namespace ForumClient
                 var navPage = (Application.Current as App).RootPage;
                 var page = new PostListPage(Client, item.Data);
                 await navPage.Navigation.PushAsync(page);
-                page.Fetch();
             }
         }
 
@@ -154,7 +157,7 @@ namespace ForumClient
             var t = e.Item as ThreadMenuItem;
             if (threadListData[threadListData.Count - 1].Id == t.Id)
             {
-                Fetch();
+                FetchBegin();
             }
         }
     }
