@@ -307,13 +307,20 @@ namespace ForumClient.Api
 
                 var start = DateTime.UtcNow;
                 var last_page = true;
-                if (!string.IsNullOrWhiteSpace(config.post_page_end))
+                if (!string.IsNullOrEmpty(config.post_page_start))
                 {
-                    last_page = doc.DocumentNode.SelectSingleNode(config.post_page_end) != null;
-                }
-                if (!string.IsNullOrWhiteSpace(config.post_page_next))
-                {
-                    last_page = doc.DocumentNode.SelectSingleNode(config.post_page_next) != null;
+                    var node = doc.DocumentNode.SelectSingleNode(config.post_page_start);
+                    if (node != null)
+                    {
+                        if (!string.IsNullOrEmpty(config.post_page_end))
+                        {
+                            last_page = doc.DocumentNode.SelectSingleNode(config.post_page_end) != null;
+                        }
+                        if (!string.IsNullOrWhiteSpace(config.post_page_next))
+                        {
+                            last_page = doc.DocumentNode.SelectSingleNode(config.post_page_next) == null;
+                        }
+                    }
                 }
 
                 var nodes = doc.DocumentNode.SelectNodes(config.post_node);
@@ -344,7 +351,10 @@ namespace ForumClient.Api
                     }
 
                     var list = new List<Api.PostNode>();
-                    RemoveNodes(content);
+                    if(!string.IsNullOrEmpty(config.post_ignore))
+                        RemoveNodes(node, config.post_ignore);
+                    if (!string.IsNullOrEmpty(config.post_ad_filter))
+                        RemoveNodes(node, config.post_ad_filter);
                     ParseHtmlNode(list, content);
 
                     posts.Add(new Api.Post()
@@ -448,22 +458,23 @@ namespace ForumClient.Api
             return value.Substring(start, end - start + 1);
         }
 
+        private static string link_viidii = "http://www.viidii.info/?";
+
         string FixLinkString(string link)
         {
-            var retval = link;
-            var start = "http://www.viidii.info/?";
-            var end = "&z";
-            int pos = retval.IndexOf(start, StringComparison.CurrentCulture);
-            if (pos >= 0)
+            if (link.StartsWith(link_viidii))
             {
-                retval = retval.Substring(pos + start.Length);
-                if (!string.IsNullOrEmpty(end))
+                int pos = link.LastIndexOf('&');
+                if (pos > 0)
                 {
-                    pos = retval.IndexOf(end, StringComparison.CurrentCulture);
-                    if (pos >= 0) retval = retval.Substring(0, pos);
-                    return retval.Replace("______", ".");
+                    link = link.Substring(link_viidii.Length, pos - link_viidii.Length).Replace("______", ".");
+                }
+                else
+                {
+                    link = link.Substring(link_viidii.Length).Replace("______", ".");
                 }
             }
+
             return link;
         }
 
@@ -530,9 +541,9 @@ namespace ForumClient.Api
             return "";
         }
 
-        void RemoveNodes(HtmlNode basenode)
+        void RemoveNodes(HtmlNode basenode, string xpath)
         {
-            var nodes = basenode.SelectNodes(config.post_ignore);
+            var nodes = basenode.SelectNodes(xpath);
             if (nodes != null)
             {
                 foreach (var node in nodes)
@@ -548,28 +559,19 @@ namespace ForumClient.Api
             {
                 if (basenode.Name == "a")
                 {
-                    var href = GetAttributeValue(basenode, "href");
-                    HtmlNode firstnode = null;
-                    if (basenode.ChildNodes.Count > 0)
+                    var href = FixLinkString(GetAttributeValue(basenode, "href"));
+                    if (href.Length > 0)
                     {
-                        firstnode = basenode.ChildNodes[0];
-                    }
-                    if (firstnode != null)
-                    {
+                        HtmlNode firstnode = null;
+                        if (basenode.ChildNodes.Count > 0)
+                        {
+                            firstnode = basenode.ChildNodes[0];
+                        }
                         nodes.Add(new PostNode()
                         {
                             NodeType = "link",
                             HRef = href,
-                            Text = firstnode.InnerText
-                        });
-                    }
-                    else
-                    {
-                        nodes.Add(new PostNode()
-                        {
-                            NodeType = "link",
-                            HRef = FixLinkString(href),
-                            Text = ""
+                            Text = firstnode != null ? firstnode.InnerText : href
                         });
                     }
                     return;

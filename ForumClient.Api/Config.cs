@@ -40,6 +40,8 @@ namespace ForumClient.Api
         public string post_time;
         public string post_content;
         public string post_ignore;
+        public string post_ad_filter;
+        public string post_page_start;
         public string post_page_end;
         public string post_page_next;
 
