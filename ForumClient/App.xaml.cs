@@ -7,30 +7,8 @@ namespace ForumClient
 {
     public partial class App : Application
     {
-        public NavigationPage RootPage
-        {
-            get { return MainPage as NavigationPage; }
-        }
-
-        public Page MasterPage
-        {
-            get { return BasePage.Master; }
-            set { BasePage.Master = value; }
-        }
-
-        public Page DetailPage
-        {
-            get { return BasePage.Detail; }
-            set { BasePage.Detail = value; }
-        }
-
-        private MasterDetailPage _BasePage;
-        public MasterDetailPage BasePage
-        {
-            get { return _BasePage; }
-        }
-
         public Dictionary<string, Api.Config> Configs;
+        private MainPage mainPage;
 
         public App()
         {
@@ -38,8 +16,28 @@ namespace ForumClient
 
             InitializeComponent();
 
-            _BasePage = new MainPage();
-            MainPage = new NavigationPage(BasePage);
+            mainPage = new MainPage();
+            MainPage = mainPage;
+        }
+
+        public void ShowAccountPage(Api.Client client)
+        {
+            mainPage.Detail = new NavigationPage(new AccountPage(client));
+        }
+
+        public void ShowForumListPage(Api.Client client)
+        {
+            mainPage.Detail = new NavigationPage(new ForumListPage(client));
+        }
+
+        public void ShowThreadListPage(Api.Client client, string fid)
+        {
+            (mainPage.Detail as NavigationPage).PushAsync(new ThreadListPage(client, fid));
+        }
+
+        public void ShowPostListPage(Api.Client client, Api.Thread tinfo)
+        {
+            (mainPage.Detail as NavigationPage).PushAsync(new PostListPage(client, tinfo));
         }
 
         private void LoadConfigs()

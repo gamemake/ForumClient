@@ -138,16 +138,14 @@ namespace ForumClient
             FetchBegin(true);
         }
 
-        private async void OnThreadSelected(object sender, SelectedItemChangedEventArgs e)
+        private void OnThreadSelected(object sender, SelectedItemChangedEventArgs e)
         {
             var item = e.SelectedItem as ThreadMenuItem;
             if (item != null)
             {
                 threadList.SelectedItem = null;
 
-                var navPage = (Application.Current as App).RootPage;
-                var page = new PostListPage(Client, item.Data);
-                await navPage.Navigation.PushAsync(page);
+                (Application.Current as App).ShowPostListPage(Client, item.Data);
             }
         }
 

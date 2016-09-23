@@ -27,16 +27,14 @@ namespace ForumClient
             FetchBegin();
         }
 
-        private async void OnForumSelected(object sender, SelectedItemChangedEventArgs e)
+        private void OnForumSelected(object sender, SelectedItemChangedEventArgs e)
         {
             var item = e.SelectedItem as ForumMenuItem;
             if (item != null)
             {
                 forumList.SelectedItem = null;
 
-                var page = new ThreadListPage(Client, item.SubID);
-                var navPage = (Application.Current as App).RootPage;
-                await navPage.Navigation.PushAsync(page);
+                (Application.Current as App).ShowThreadListPage(Client, item.SubID);
             }
         }
 

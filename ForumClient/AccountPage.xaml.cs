@@ -20,6 +20,7 @@ namespace ForumClient
                 MessageLabel.Text = "请输入用户名和密码";
                 return;
             }
+
             var result = await Client.SignIn(UsernameEntry.Text, PasswordEntry.Text);
             if (result != "")
             {
@@ -39,7 +40,7 @@ namespace ForumClient
                 return;
             }
 
-            (Application.Current as App).DetailPage = new ForumListPage(Client);
+            (Application.Current as App).ShowForumListPage(Client);
         }
     }
 }
