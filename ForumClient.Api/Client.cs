@@ -469,6 +469,7 @@ namespace ForumClient.Api
 
         string FixLinkString(string link)
         {
+            /*
             if (link.StartsWith(link_viidii))
             {
                 int pos = link.LastIndexOf('&');
@@ -481,7 +482,7 @@ namespace ForumClient.Api
                     link = link.Substring(link_viidii.Length).Replace("______", ".");
                 }
             }
-
+            */
             return link;
         }
 
