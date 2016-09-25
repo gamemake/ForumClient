@@ -1,0 +1,42 @@
+
+name=CCH
+desc=HiPDA Living...
+icon=
+allow_anonymous=false
+
+text_encoder=gbk
+user_agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36
+base_url=http://www.chiphell.com
+login_url=http://www.hi-pda.com/forum/logging.php?action=login&loginsubmit=yes&inajax=1
+logout_url=http://www.hi-pda.com/forum/logging.php?action=logout&formhash=420b6ba6
+forumlist_url=http://www.chiphell.com/forum.php
+threadlist_url=http://www.hi-pda.com/forum/forumdisplay.php?fid={0}&page={1}
+postlist_url=http://www.hi-pda.com/forum/viewthread.php?tid={0}&extra=page%3D1&page={1}
+cookie_check=cdb_auth
+login_messge=CDATA[.*]]
+
+forum_node=/html/body/div[@id='wrap']/div[@class='main']/div[@class='content']/div[@class='mainbox list']/table/tbody/tr
+forum_id=./th/div/h2/a/@href
+forum_name=./th/div/h2/a/text()
+forum_desc=./th/div/p/text()
+
+thread_node=/html/body/div[@id='wrap']/div[@class='main']/div[@class='content']/div[@id='threadlist']/table/tbody/tr
+thread_default=./th/text()[.='版块主题']
+thread_ontop=
+thread_id=./th[contains(@class,'subject')]/span/a/@href
+thread_title=./th[contains(@class,'subject')]/span/a/text()
+thread_post_author=./td[@class='author']/cite/a/text()
+thread_post_time=./td[@class='author']/em/text()
+thread_last_author=./td[@class='lastpost']/cite/a/text()
+thread_last_time=./td[@class='lastpost']/em/a/text()
+
+post_node=/html/body/div[@id='wrap']/div[@id='postlist']/div/table
+post_id=./tr/td[@class='postcontent']/div[@class='postactions']/div[@class='postact s_clear']/p/a[@class='fastreply']/@href
+post_author=./tr/td[@class='postauthor']/div[@class='postinfo']/a/text()
+post_time=./tr/td[@class='postcontent']/div[@class='postinfo']/div[@class='posterinfo']/div[@class='authorinfo']/em/text()
+post_content=./tr/td[@class='postcontent']/div[@class='defaultpost']/div/div/table/tr/td[@class='t_msgfont']
+post_ignore=.//div[@class='t_attach']|.//span[@style='position: absolute; display: none']
+post_ad_filter=
+post_page_start=/html/body/div[@id='wrap']/div[@class='forumcontrol']/table/tbody/tr/td/div[@class='pages']
+post_page_end=
+post_page_next=./a[@class='next']

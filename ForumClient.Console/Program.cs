@@ -7,57 +7,90 @@ namespace ForumClient
     {
         public static void Main(string[] args)
         {
-            DoTest();
-            Console.WriteLine("Press any key to exit...");
-            Console.ReadLine();
+            var sem = new System.Threading.Semaphore(0, 1);
+            Run(sem, args);
+            sem.WaitOne();
         }
 
-        private static async void DoTest()
+        public static async void Run(System.Threading.Semaphore sem, string[] args)
         {
             try
             {
-#if true
-                var config_name = "hipda";
-                var config_file = @"/Users/gamemake/Projects/ForumClient/Config/hipda.txt";
-                var fourm_id = "7";
-                var thread_id = "193801";
-#else
-                var config_name = "1024";
-                var config_file = @"/Users/gamemake/Projects/ForumClient/Config/1024.txt";
-                var fourm_id = "7";
-                var thread_id = "1315";
-#endif
-
-                var config = new Api.Config();
-                config.LoadFromText(System.IO.File.ReadAllText(config_file));
-                var client = new Api.Client(config_name, config);
-
-                // var doc = client.GetData("http://www.t66y.com/read.php?tid=2072962&page=1", true);
-
-                //await client.SignIn("gamemake", "123456");
-
-                var forumList = await client.GetForumList();
-                foreach (var forum in forumList)
+                if (args.Length >= 2)
                 {
-                    Console.WriteLine("Forum {0} {1}", forum.Id, forum.Name);
-                }
-
-                var threadList = await client.GetForum(fourm_id, 1);
-                foreach (var thread in threadList)
-                {
-                    Console.WriteLine("Thread {0} {1} {2}", thread.Id, thread.PostAuthor, thread.Title);
-                }
-
-                var postList = await client.GetThread(thread_id, 1);
-                foreach (var post in postList)
-                {
-                    Console.WriteLine("Post {0} {1}", post.PostAuthor, post.PostTime);
+                    var config = Api.Config.LoadConfig(args[0]);
+                    var client = new Api.Client(args[0], config);
+                    if (args[1] == "forum")
+                    {
+                        var list = await client.GetForumList();
+                        if (list != null)
+                        {
+                            foreach (var item in list)
+                            {
+                                Console.WriteLine("Forum {0} {1}", item.Id, item.Name);
+                            }
+                        }
+                    }
+                    else if (args[1] == "thread")
+                    {
+                        if (args.Length >= 4)
+                        {
+                            var list = await client.GetForum(args[2], int.Parse(args[3]));
+                            if (list != null)
+                            {
+                                foreach (var item in list)
+                                {
+                                    Console.WriteLine("Thread {0} {1} {2}", item.Id, item.PostAuthor, item.Title);
+                                }
+                            }
+                        }
+                    }
+                    else if (args[1] == "post")
+                    {
+                        if (args.Length >= 4)
+                        {
+                            var list = await client.GetThread(args[2], int.Parse(args[3]));
+                            if (list != null)
+                            {
+                                foreach (var item in list)
+                                {
+                                    Console.WriteLine("Post {0} {1}", item.PostAuthor, item.PostTime);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (args.Length >= 3)
+                        {
+                            var doc = await client.GetHtmlDocument(args[1], false);
+                            if (doc != null)
+                            {
+                                var nodes = doc.DocumentNode.SelectNodes(args[2]);
+                                if (nodes == null)
+                                {
+                                    Console.WriteLine("no match node");
+                                }
+                                else
+                                {
+                                    foreach (var node in nodes)
+                                    {
+                                        Console.WriteLine("== START [{0}]", node.XPath);
+                                        new Api.NodeParser().PrintNode(node);
+                                        Console.WriteLine("== END   [{0}]", node.XPath);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine("Exception  : {0}", e.Message);
+                Console.WriteLine("StackTrace : {0}", e.StackTrace);
             }
+            sem.Release(1);
         }
     }
 }

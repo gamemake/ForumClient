@@ -205,7 +205,7 @@ namespace ForumClient.Api
                         Console.WriteLine("error in parse forum node : id == \"\" || name == \"\" || desc == \"\"");
                         Console.WriteLine("XPath = {0}", node.XPath);
                         Console.WriteLine("===============================================================");
-                        Console.WriteLine(node.InnerHtml);
+                        new NodeParser().PrintNode(node);
                         Console.WriteLine("===============================================================");
                         continue;
                     }
@@ -275,7 +275,7 @@ namespace ForumClient.Api
                         Console.WriteLine("error in parse thread node : id == \"\" || title == \"\"");
                         Console.WriteLine("XPath = {0}", node.XPath);
                         Console.WriteLine("===============================================================");
-                        Console.WriteLine(node.InnerHtml);
+                        new NodeParser().PrintNode(node);
                         Console.WriteLine("===============================================================");
                         continue;
                     }
@@ -350,19 +350,17 @@ namespace ForumClient.Api
                     if (author == "" || content == null)
                     {
                         Console.WriteLine("error in parse post node : author == \"\" || content == null");
-                        Console.WriteLine("XPath = {0}", node.XPath);
                         Console.WriteLine("===============================================================");
-                        Console.WriteLine(node.InnerHtml);
+                        new NodeParser().PrintNode(node);
                         Console.WriteLine("===============================================================");
                         continue;
                     }
 
-                    var list = new List<Api.PostNode>();
                     if(!string.IsNullOrEmpty(config.post_ignore))
                         RemoveNodes(node, config.post_ignore);
                     if (!string.IsNullOrEmpty(config.post_ad_filter))
                         RemoveNodes(node, config.post_ad_filter);
-                    ParseHtmlNode(list, content);
+                    var list = new NodeParser().Parse(content);
 
                     posts.Add(new Api.Post()
                     {
@@ -465,11 +463,11 @@ namespace ForumClient.Api
             return value.Substring(start, end - start + 1);
         }
 
-        private static string link_viidii = "http://www.viidii.info/?";
 
         string FixLinkString(string link)
         {
             /*
+        private static string link_viidii = "http://www.viidii.info/?";
             if (link.StartsWith(link_viidii))
             {
                 int pos = link.LastIndexOf('&');
@@ -500,32 +498,6 @@ namespace ForumClient.Api
                 }
             }
             return retval;
-        }
-
-        void PrintNode(int level, HtmlNode basenode)
-        {
-            if (level == 4) return;
-
-            if (basenode.NodeType == HtmlNodeType.Element)
-            {
-                for (int i = 0; i < level; i++)
-                    Console.Write("      ");
-                var text = basenode.InnerHtml.Replace('\n', ' ').Replace('\r', ' ');
-                if (text.Length > 40) text = text.Substring(0, 40);
-                Console.WriteLine("{0}-{1}-{2}-{3}", basenode.Name, GetAttributeValue(basenode, "id"), GetAttributeValue(basenode, "class"), text);
-                foreach (var node in basenode.ChildNodes)
-                {
-                    PrintNode(level + 1, node);
-                }
-            }
-        }
-
-        void PrintHtml(HtmlDocument doc)
-        {
-            foreach (var node in doc.DocumentNode.ChildNodes)
-            {
-                PrintNode(0, node);
-            }
         }
 
         string MD5Password(string password)
@@ -560,66 +532,5 @@ namespace ForumClient.Api
                 }
             }
         }
-
-        void ParseHtmlNode(List<PostNode> nodes, HtmlNode basenode)
-        {
-            if (basenode.NodeType == HtmlNodeType.Element)
-            {
-                if (basenode.Name == "a")
-                {
-                    var href = FixLinkString(GetAttributeValue(basenode, "href"));
-                    if (href.Length > 0)
-                    {
-                        HtmlNode firstnode = null;
-                        if (basenode.ChildNodes.Count > 0)
-                        {
-                            firstnode = basenode.ChildNodes[0];
-                        }
-                        nodes.Add(new PostNode()
-                        {
-                            NodeType = "link",
-                            HRef = href,
-                            Text = firstnode != null ? firstnode.InnerText : href
-                        });
-                    }
-                    return;
-                }
-                if (basenode.Name == "img")
-                {
-                    var src = GetAttributeValue(basenode, "file").Trim();
-                    if (src == "")
-                    {
-                        src = GetAttributeValue(basenode, "src").Trim();
-                    }
-                    nodes.Add(new PostNode()
-                    {
-                        NodeType = "image",
-                        HRef = src
-                    });
-                    return;
-                }
-            }
-
-            if (basenode.NodeType == HtmlNodeType.Text)
-            {
-
-                var text = HtmlEntity.DeEntitize(basenode.InnerText);
-                text = text.Trim();
-                if (text.Length > 0)
-                {
-                    nodes.Add(new PostNode()
-                    {
-                        NodeType = "text",
-                        Text = text
-                    });
-                }
-            }
-
-            foreach (var node in basenode.ChildNodes)
-            {
-                ParseHtmlNode(nodes, node);
-            }
-        }
-
     }
 }

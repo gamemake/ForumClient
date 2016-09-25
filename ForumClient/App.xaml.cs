@@ -57,41 +57,13 @@ namespace ForumClient
                     if (file.EndsWith(".txt"))
                     {
                         var name = file.Substring(0, file.Length - 4);
-                        var config = LoadConfig(name);
+                        var config = Api.Config.LoadConfig(name);
                         if (config != null)
                         {
                             Configs.Add(name, config);
                         }
                     }
                 }
-            }
-        }
-
-        private Api.Config LoadConfig(string config_name)
-        {
-            try
-            {
-                var config = new Api.Config();
-
-#if __IOS__
-            config.LoadFromText(System.IO.File.ReadAllText(System.IO.Path.Combine(Foundation.NSBundle.MainBundle.BundlePath, "config/" + config_name +".txt")));
-#elif __ANDROID__
-                using (var stream = Android.App.Application.Context.ApplicationContext.Assets.Open("config/" + config_name + ".txt"))
-                {
-                    config.LoadFromText(new System.IO.StreamReader(stream).ReadToEnd());
-                }
-#else
-
-#endif
-
-                return config;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("load Api.Config{0}) exception", config_name);
-                Console.WriteLine("Exception  : {0}", e.Message);
-                Console.WriteLine("StackTrace : {0}", e.StackTrace);
-                return null;
             }
         }
 

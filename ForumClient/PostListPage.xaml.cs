@@ -121,8 +121,17 @@ namespace ForumClient
             }
             else if (node.NodeType == "link")
             {
-                var link = new Label() { Text = node.Text, LineBreakMode = LineBreakMode.TailTruncation, TextColor = Color.Blue, HorizontalOptions = LayoutOptions.Start };
-                link.GestureRecognizers.Add(new TapGestureRecognizer() { Command = new Command(() => { OpenLink(node.HRef); }) });
+                var link = new Label()
+                {
+                    Text = node.Text,
+                    LineBreakMode = LineBreakMode.TailTruncation,
+                    TextColor = Color.Blue,
+                    HorizontalOptions = LayoutOptions.Start
+                };
+                link.GestureRecognizers.Add(new TapGestureRecognizer()
+                {
+                    Command = new Command(() => { OpenLink(node.HRef); })
+                });
                 content.Children.Add(link);
             }
             else if (node.NodeType == "image")
@@ -131,7 +140,7 @@ namespace ForumClient
                 content.Children.Add(image);
                 System.Threading.Tasks.Task.Run(async () =>
                 {
-                    var source = await GetImageSource(node.HRef);
+                    var source = await GetImageSource(node.Text);
                     if (source != null)
                     {
                         Device.BeginInvokeOnMainThread(() =>
@@ -158,18 +167,48 @@ namespace ForumClient
 
         private void EndPost(Api.Post post)
         {
-            var refen = new Label() { Text = " 引用 ", TextColor = Color.Blue, FontSize = 10, HorizontalOptions = LayoutOptions.End };
-            refen.GestureRecognizers.Add(new TapGestureRecognizer() { Command = new Command(() => { PostReference(post.Id, "aa"); }) });
-            var reply = new Label() { Text = " 回复 ", TextColor = Color.Blue, FontSize = 10, HorizontalOptions = LayoutOptions.End };
-            reply.GestureRecognizers.Add(new TapGestureRecognizer() { Command = new Command(() => { PostReply(post.Id, "aa"); }) });
+            var refen = new Label()
+            {
+                Text = " 引用 ",
+                TextColor = Color.Blue,
+                FontSize = 10,
+                HorizontalOptions = LayoutOptions.End
+            };
+            refen.GestureRecognizers.Add(new TapGestureRecognizer()
+            {
+                Command = new Command(() => { PostReference(post.Id, "aa"); })
+            });
+            var reply = new Label()
+            {
+                Text = " 回复 ",
+                TextColor = Color.Blue,
+                FontSize = 10,
+                HorizontalOptions = LayoutOptions.End
+            };
+            reply.GestureRecognizers.Add(new TapGestureRecognizer()
+            {
+                Command = new Command(() => { PostReply(post.Id, "aa"); })
+            });
             content.Children.Add(new StackLayout()
             {
                 Orientation = StackOrientation.Horizontal,
                 Spacing = 0,
                 Children =
                     {
-                        new Label() { Text = post.PostAuthor, TextColor=Color.Gray, FontSize = 10, HorizontalOptions=LayoutOptions.StartAndExpand },
-                        new Label() { Text = post.PostTime,   TextColor=Color.Gray, FontSize = 10, HorizontalOptions=LayoutOptions.End },
+                        new Label()
+                        {
+                            Text = post.PostAuthor,
+                            TextColor=Color.Gray,
+                            FontSize = 10,
+                            HorizontalOptions=LayoutOptions.StartAndExpand
+                        },
+                        new Label()
+                        {
+                            Text = post.PostTime,
+                            TextColor=Color.Gray,
+                            FontSize = 10,
+                            HorizontalOptions=LayoutOptions.End
+                        },
                         refen, reply
                     }
             });

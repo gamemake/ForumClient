@@ -84,5 +84,42 @@ namespace ForumClient.Api
                 }
             }
         }
+
+        public static Config LoadConfig(string config_name)
+        {
+            try
+            {
+#if __IOS__
+                var config_file = System.IO.Path.Combine(Foundation.NSBundle.MainBundle.BundlePath, "config/" + config_name +".txt");
+                var config_text = System.IO.File.ReadAllText(config_file);
+#elif __ANDROID__
+                var config_text = "";
+                using (var stream = Android.App.Application.Context.ApplicationContext.Assets.Open("config/" + config_name + ".txt"))
+                {
+                    config_text = new System.IO.StreamReader(stream).ReadToEnd();
+                }
+#else
+                var config_file = System.IO.Path.Combine(".", config_name + ".txt");
+                if (!System.IO.File.Exists(config_file))
+                {
+                    var exe_path = System.Reflection.Assembly.GetEntryAssembly().Location;
+                    var exe_dir = System.IO.Path.GetDirectoryName(exe_path);
+                    config_file = System.IO.Path.Combine(new string[] { "..","..","..","Config", config_name + ".txt"});
+                }
+                var config_text = System.IO.File.ReadAllText(config_file);
+#endif
+
+                var config = new Api.Config();
+                config.LoadFromText(config_text);
+                return config;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("load Api.Config{0}) exception", config_name);
+                Console.WriteLine("Exception  : {0}", e.Message);
+                Console.WriteLine("StackTrace : {0}", e.StackTrace);
+                return null;
+            }
+        }
     }
 }
