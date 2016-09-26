@@ -4,7 +4,7 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" x:Class="ForumClient.PostListPage" Title="主题" Padding="0">
 	<ContentPage.Content>
 		<StackLayout Spacing = "0">
-			<ProgressBar x:Name="progressBar" VerticalOptions="Start"/>
+			<ProgressBar x:Name="progressBar" VerticalOptions="Start" Progress="0"/>
 			<ScrollView x:Name="scrollView" VerticalOptions="FillAndExpand">
 				<StackLayout x:Name="content"></StackLayout>
 			</ScrollView>

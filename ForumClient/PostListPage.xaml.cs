@@ -59,7 +59,6 @@ namespace ForumClient
                 {
                     totalNode += post.Content.Count;
                 }
-                progressBar.Progress = 0;
 
                 System.Threading.Tasks.Task.Run(() =>
                 {
